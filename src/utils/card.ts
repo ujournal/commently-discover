@@ -1,33 +1,41 @@
-import { EMBED_RESIZE_SCRIPT } from "./constants"
-import { escapeHtml, prepareText } from "./html"
+import { escapeHtml, prepareText } from "./html";
 
 /** Deterministic gradient CSS from URL (for cards with no image). */
 function urlToGradientCss(url: string): string {
-  let h = 0
-  for (let i = 0; i < url.length; i++) h = ((h << 5) - h + url.charCodeAt(i)) | 0
+  let h = 0;
+  for (let i = 0; i < url.length; i++)
+    h = ((h << 5) - h + url.charCodeAt(i)) | 0;
   // Cool base hue (teal–blue–violet), then complementary (soft warm)
-  const coolHue = 200 + ((h % 70) + 70) % 70 // 200–270°
-  const compHue = (coolHue + 180) % 360
-  return `linear-gradient(135deg, hsl(${coolHue}, 38%, 78%), hsl(${compHue}, 32%, 90%))`
+  const coolHue = 200 + (((h % 70) + 70) % 70); // 200–270°
+  const compHue = (coolHue + 180) % 360;
+  return `linear-gradient(135deg, hsl(${coolHue}, 38%, 78%), hsl(${compHue}, 32%, 90%))`;
 }
 
 /** Build responsive HTML card with base64 images and cache headers. */
 export function buildCardHtml(opts: {
-  title: string | undefined
-  description: string | undefined
-  imageDataUrl: string | null
-  faviconDataUrl: string | null
-  url: string
-  href?: string
-  siteName: string
+  title: string | undefined;
+  description: string | undefined;
+  imageDataUrl: string | null;
+  faviconDataUrl: string | null;
+  url: string;
+  href?: string;
+  siteName: string;
 }): string {
-  const { title, description, imageDataUrl, faviconDataUrl, url, href, siteName } = opts
-  const displayTitle = title ? prepareText(title) : "Link"
-  const displayDesc = description ? prepareText(description) : ""
-  const displayUrl = prepareText(url)
-  const displaySite = prepareText(siteName)
+  const {
+    title,
+    description,
+    imageDataUrl,
+    faviconDataUrl,
+    url,
+    href,
+    siteName,
+  } = opts;
+  const displayTitle = title ? prepareText(title) : "Link";
+  const displayDesc = description ? prepareText(description) : "";
+  const displayUrl = prepareText(url);
+  const displaySite = prepareText(siteName);
 
-  const gradientCss = imageDataUrl ? null : urlToGradientCss(url)
+  const gradientCss = imageDataUrl ? null : urlToGradientCss(url);
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -37,7 +45,7 @@ export function buildCardHtml(opts: {
   <title>${displayTitle}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; display: flex; justify-content: center; align-items: center; }
+    html, body { width: 100%; height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; display: flex; justify-content: center; align-items: center; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     .card {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -175,9 +183,11 @@ export function buildCardHtml(opts: {
 <body>
   <article class="card">
     <a class="card-link" href="${escapeHtml(href ?? url)}" target="_blank" rel="noopener noreferrer">
-${gradientCss
-  ? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
-  : `      <img class="card-image" src="${imageDataUrl}" alt="">`}
+${
+  gradientCss
+    ? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
+    : `      <img class="card-image" src="${imageDataUrl}" alt="">`
+}
       <div class="card-body">
         <div class="card-site">
 ${faviconDataUrl ? `          <img src="${faviconDataUrl}" alt="">` : ""}
@@ -187,7 +197,6 @@ ${faviconDataUrl ? `          <img src="${faviconDataUrl}" alt="">` : ""}
       </div>
     </a>
   </article>
-  <script>${EMBED_RESIZE_SCRIPT}</script>
 </body>
-</html>`
+</html>`;
 }

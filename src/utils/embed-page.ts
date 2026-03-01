@@ -14,9 +14,9 @@ export type EmbedPageOptions = {
   fallbackLabel: string
   /** Fallback link URL (will be escaped). */
   fallbackHref: string
-  /** Optional: accent color for fallback link (default #1d9bf0). */
+  /** Optional: accent color for fallback link (default blue #1d9bf0). */
   fallbackLinkColor?: string
-  /** Optional: extra CSS for html/body (e.g. background, padding). */
+  /** Optional: extra CSS for html/body. Default: no background (transparent). */
   bodyStyle?: string
   /** Optional: extra CSS for .embed-wrap and children (e.g. iframe dimensions). */
   wrapperStyle?: string
@@ -32,7 +32,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     fallbackLabel,
     fallbackHref,
     fallbackLinkColor = "#1d9bf0",
-    bodyStyle = "background: #f7f9f9;",
+    bodyStyle = "background: transparent;",
     wrapperStyle = "",
     resizeScript = EMBED_RESIZE_SCRIPT,
   } = opts

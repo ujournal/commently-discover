@@ -10,15 +10,19 @@ import { fetchAsBase64 } from "./utils/image";
 import {
   buildFacebookEmbedHtml,
   buildInstagramEmbedHtml,
+  buildRedditEmbedHtml,
   buildSteamEmbedHtml,
   buildTelegramEmbedHtml,
+  buildThreadsEmbedHtml,
   buildTwitterEmbedHtml,
 } from "./utils/platform-embeds";
 import {
   getFacebookPostRef,
   getInstagramEmbedRef,
+  getRedditPostRef,
   getSteamWidgetRef,
   getTelegramPostRef,
+  getThreadsPostRef,
   getTwitterStatusRef,
 } from "./utils/platform-refs";
 import { shimSiteData } from "./utils/shim";
@@ -30,7 +34,15 @@ export type { EmbedPageOptions } from "./utils/embed-page";
 export default {
   async fetch(request: Request): Promise<Response> {
     const { searchParams } = new URL(request.url);
-    const target = searchParams.get("url");
+    let target = searchParams.get("url");
+    // Handle double-encoded url param (e.g. %253A → %3A, %2525 → %25)
+    if (target && target.includes("%25")) {
+      try {
+        target = decodeURIComponent(target);
+      } catch {
+        /* keep original */
+      }
+    }
 
     if (!target || !target.match(/^https?:\/\//)) {
       const html = buildCardHtml({
@@ -112,6 +124,33 @@ export default {
     const telegramPostRef = getTelegramPostRef(target);
     if (telegramPostRef) {
       const html = buildTelegramEmbedHtml(telegramPostRef, acceptLanguage);
+      return new Response(html, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          ...CACHE_HEADERS,
+        },
+      });
+    }
+
+    const threadsPostUrl = getThreadsPostRef(target);
+    if (threadsPostUrl) {
+      const html = buildThreadsEmbedHtml(threadsPostUrl, acceptLanguage);
+      return new Response(html, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          ...CACHE_HEADERS,
+        },
+      });
+    }
+
+    const redditRef = getRedditPostRef(target);
+    if (redditRef) {
+      const html = buildRedditEmbedHtml(
+        redditRef.postUrl,
+        redditRef.subreddit,
+        redditRef.titleSlug,
+        acceptLanguage,
+      );
       return new Response(html, {
         headers: {
           "content-type": "text/html; charset=utf-8",

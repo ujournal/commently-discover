@@ -108,14 +108,14 @@ export function getEmbedUrl(url: string): string | null {
       return null
     }
 
-    // Reddit: reddit.com/r/sub/comments/id/title/
-    if (h === "reddit.com" || h === "www.reddit.com" || h === "old.reddit.com") {
-      if (/^\/r\/[\w+]+\/comments\/[\w]+\//.test(u.pathname)) {
-        const path = u.pathname.replace(/\/?$/, "")
-        return `https://www.reddit.com${path}/embed`
-      }
+    // Reddit: handled via HTML page with iframe (same pattern as Instagram/Steam)
+    if (
+      h === "reddit.com" ||
+      h === "www.reddit.com" ||
+      h === "old.reddit.com" ||
+      h === "new.reddit.com"
+    )
       return null
-    }
 
     // CodePen: codepen.io/user/pen/xxx or /user/details/xxx
     if (h === "codepen.io") {
@@ -186,6 +186,9 @@ export function getEmbedUrl(url: string): string | null {
 
     // Steam: handled via HTML wrapper page with iframe + resize script (same pattern as tg/fb/x)
     if (h === "store.steampowered.com" || h === "steamcommunity.com") return null
+
+    // Threads: handled via HTML page with blockquote + embed.js (same pattern as X/Telegram)
+    if (h === "threads.net" || h === "www.threads.net" || h === "threads.com" || h === "www.threads.com") return null
 
     return null
   } catch {

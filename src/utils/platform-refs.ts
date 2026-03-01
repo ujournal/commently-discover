@@ -58,6 +58,67 @@ export function getInstagramEmbedRef(url: string): string | null {
   }
 }
 
+/** Threads post URL for the official embed (blockquote + embed.js). Returns the post URL or null. */
+export function getThreadsPostRef(url: string): string | null {
+  try {
+    const u = new URL(url)
+    const h = host(u)
+    const isThreads = h === "threads.net" || h === "www.threads.net" || h === "threads.com" || h === "www.threads.com"
+    if (!isThreads) return null
+    // Format: /@username/post/{media-shortcode}/ or /t/{conversation-id}
+    const path = u.pathname.replace(/^\/+|\/+$/, "")
+    const parts = path.split("/").filter(Boolean)
+    const canonical = "https://www.threads.net"
+    if (parts.length >= 2 && parts[0].startsWith("@") && parts[1] === "post" && parts[2]) {
+      return `${canonical}/${parts[0]}/post/${parts[2]}/`
+    }
+    if (parts[0] === "t" && parts[1]) {
+      return `${canonical}/t/${parts[1]}/`
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+/** Reddit post: embed URL, post URL, subreddit, and optional title slug for the official blockquote embed. */
+export function getRedditPostRef(url: string): {
+  embedUrl: string
+  postUrl: string
+  subreddit: string
+  titleSlug: string | null
+} | null {
+  try {
+    const u = new URL(url)
+    const h = host(u)
+    if (
+      h !== "reddit.com" &&
+      h !== "www.reddit.com" &&
+      h !== "old.reddit.com" &&
+      h !== "new.reddit.com"
+    )
+      return null
+    const path = u.pathname.replace(/^\/+|\/+$/, "")
+    const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)(?:\/(.*))?$/)
+    if (!m) return null
+    const subreddit = m[1]
+    const titleSlug = m[3] && m[3].length > 0 ? m[3] : null
+    const pathNorm = path.replace(/\/+$/, "")
+    const pathWithSlash = pathNorm ? `/${pathNorm}/` : "/"
+    const canonical = "https://www.reddit.com"
+    const pathNoTrailing = pathWithSlash.replace(/\/$/, "")
+    const singleTrailing = (url: string) => url.replace(/\/+$/, "/")
+    return {
+      embedUrl: singleTrailing(new URL(`${pathNoTrailing}/embed`, canonical).href),
+      postUrl: singleTrailing(new URL(pathWithSlash, canonical).href),
+      subreddit,
+      titleSlug,
+    }
+  } catch {
+    return null
+  }
+}
+
 /** Steam store app ref: widget URL for store.steampowered.com/app/ID or steamcommunity.com/app/ID, or null. */
 export function getSteamWidgetRef(url: string): { widgetUrl: string; pageUrl: string } | null {
   try {
