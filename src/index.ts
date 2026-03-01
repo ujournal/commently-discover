@@ -180,7 +180,8 @@ function buildCardHtml(opts: {
   <title>${displayTitle}</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; overflow: hidden; }
+    html, body { height: 100%; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     .card {
       font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       display: flex;
@@ -531,12 +532,8 @@ function getEmbedUrl(url: string): string | null {
       return null
     }
 
-    // Steam: store.steampowered.com/app/APP_ID or steamcommunity.com/app/APP_ID → official store widget
-    if (h === "store.steampowered.com" || h === "steamcommunity.com") {
-      const appMatch = u.pathname.match(/\/app\/(\d+)/)
-      if (appMatch) return `https://store.steampowered.com/widget/${appMatch[1]}/`
-      return null
-    }
+    // Steam: handled via HTML wrapper page with iframe + resize script (same pattern as tg/fb/x)
+    if (h === "store.steampowered.com" || h === "steamcommunity.com") return null
 
     return null
   } catch {
@@ -584,11 +581,12 @@ function buildTwitterEmbedHtml(tweetId: string, tweetHref: string): string {
   <title>X post</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; background: #f7f9f9; padding: 1rem; font-family: system-ui, sans-serif; }
+    html, body { min-height: 100%; background: #f7f9f9; padding: 1rem; font-family: system-ui, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     @media (prefers-color-scheme: dark) { html, body { background: #16181c; } }
     .tweet-container { margin: 0 auto; max-width: 550px; min-height: 100px; display: flex; justify-content: center; }
     .tweet-container blockquote { margin: 0 auto; }
-    .fallback { margin-top: 0.75rem; text-align: center; }
+    .fallback { margin-top: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
     .fallback a { color: #1d9bf0; text-decoration: none; font-size: 0.9rem; }
     .fallback a:hover { text-decoration: underline; }
   </style>
@@ -625,11 +623,12 @@ function buildFacebookEmbedHtml(postUrl: string): string {
   <title>Facebook post</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; background: #f0f2f5; padding: 1rem; font-family: system-ui, sans-serif; }
+    html, body { min-height: 100%; background: #f0f2f5; padding: 1rem; font-family: system-ui, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     @media (prefers-color-scheme: dark) { html, body { background: #18191a; } }
     .fb-embed-wrap { margin: 0 auto; max-width: 550px; min-height: 100px; display: flex; justify-content: center; }
     .fb-embed-wrap .fb-post { margin: 0 auto; }
-    .fallback { margin-top: 0.75rem; text-align: center; }
+    .fallback { margin-top: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
     .fallback a { color: #0866ff; text-decoration: none; font-size: 0.9rem; }
     .fallback a:hover { text-decoration: underline; }
   </style>
@@ -688,11 +687,12 @@ function buildInstagramEmbedHtml(embedUrl: string, postUrl: string): string {
   <title>Instagram post</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; background: #f7f9f9; padding: 1rem; font-family: system-ui, sans-serif; overflow: hidden; }
+    html, body { min-height: 100%; background: #f7f9f9; padding: 1rem; font-family: system-ui, sans-serif; overflow: hidden; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     @media (prefers-color-scheme: dark) { html, body { background: #16181c; } .ig-embed-wrap iframe { outline-color: rgba(255, 255, 255, 0.08); } }
     .ig-embed-wrap { margin: 0 auto; max-width: 550px; min-height: 100px; display: flex; justify-content: center; overflow: hidden; }
     .ig-embed-wrap iframe { width: 100%; min-width: 326px; height: 800px; border: 0; display: block; margin: 0 auto; overflow: hidden; outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; }
-    .fallback { margin-top: 0.75rem; text-align: center; }
+    .fallback { margin-top: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
     .fallback a { color: #0095f6; text-decoration: none; font-size: 0.9rem; }
     .fallback a:hover { text-decoration: underline; }
   </style>
@@ -707,9 +707,90 @@ function buildInstagramEmbedHtml(embedUrl: string, postUrl: string): string {
 </html>`
 }
 
+/** Steam store app ref: widget URL for store.steampowered.com/app/ID or steamcommunity.com/app/ID, or null. */
+function getSteamWidgetRef(url: string): { widgetUrl: string; pageUrl: string } | null {
+  try {
+    const u = new URL(url)
+    const h = host(u)
+    if (h !== "store.steampowered.com" && h !== "steamcommunity.com") return null
+    const appMatch = u.pathname.match(/\/app\/(\d+)/)
+    if (!appMatch) return null
+    const appId = appMatch[1]
+    return {
+      widgetUrl: `https://store.steampowered.com/widget/${appId}/`,
+      pageUrl: u.href,
+    }
+  } catch {
+    return null
+  }
+}
+
+/** Build HTML page that embeds a Steam game widget in an iframe with height resize to parent (same pattern as tg/fb/x/instagram). */
+function buildSteamEmbedHtml(widgetUrl: string, pageUrl: string): string {
+  const safeWidgetUrl = escapeHtml(widgetUrl)
+  const safePageUrl = escapeHtml(pageUrl)
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Steam store</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { min-height: 100%; background: transparent; display: flex; flex-direction: column; justify-content: center; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+    .steam-embed-wrap { padding: 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; }
+    .steam-embed-wrap iframe { width: 100%; border: 0; display: block; height: 200px; }
+    .fallback { margin-top: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
+    .fallback a { color: #1d9bf0; text-decoration: none; font-size: 0.9rem; }
+    .fallback a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="steam-embed-wrap">
+    <iframe src="${safeWidgetUrl}" title="Steam store widget"></iframe>
+  </div>
+  <p class="fallback">\u2197 <a href="${safePageUrl}" target="_blank" rel="noopener noreferrer">View on Steam</a></p>
+  <script>
+  (function() {
+    var MAX_HEIGHT = 280;
+    var lastHeight = 0;
+    function sendHeight() {
+      var h = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        document.documentElement.offsetHeight,
+        document.body.offsetHeight || 0
+      );
+      h = Math.min(h, MAX_HEIGHT);
+      if (h !== lastHeight) {
+        lastHeight = h;
+        try { window.parent.postMessage({ type: "commently-discover-resize", height: h }, "*"); } catch (e) {}
+      }
+    }
+    function scheduleSend() {
+      requestAnimationFrame(function() { sendHeight(); });
+    }
+    sendHeight();
+    if (window.ResizeObserver) {
+      var ro = new ResizeObserver(scheduleSend);
+      ro.observe(document.body);
+      if (document.documentElement !== document.body) ro.observe(document.documentElement);
+    }
+    var mo = new MutationObserver(scheduleSend);
+    mo.observe(document.body, { childList: true, subtree: true });
+    window.addEventListener("load", scheduleSend);
+  })();
+  </script>
+</body>
+</html>`
+}
+
 /** Build HTML page that embeds a Telegram post via the official widget script. */
 function buildTelegramEmbedHtml(postRef: string): string {
   const safeRef = escapeHtml(postRef)
+  const postUrl = `https://t.me/${postRef}`
+  const safePostUrl = escapeHtml(postUrl)
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -718,15 +799,20 @@ function buildTelegramEmbedHtml(postRef: string): string {
   <title>Telegram post</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; background: transparent; }
+    html, body { min-height: 100%; background: transparent; scrollbar-width: none; -ms-overflow-style: none; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     .telegram-embed-wrap { padding: 1rem; width: 100%; max-width: 550px; margin: 0 auto; display: flex; justify-content: center; }
     .telegram-embed-wrap iframe { max-width: 100%; display: block; margin: 0 auto; }
+    .fallback { margin-top: 0.75rem; margin-bottom: 0.75rem; text-align: center; }
+    .fallback a { color: #1d9bf0; text-decoration: none; font-size: 0.9rem; }
+    .fallback a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
   <div class="telegram-embed-wrap">
     <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${safeRef}" data-width="100%"></script>
   </div>
+  <p class="fallback">\u2197 <a href="${safePostUrl}" target="_blank" rel="noopener noreferrer">View on Telegram</a></p>
   <script>${EMBED_RESIZE_SCRIPT}</script>
 </body>
 </html>`
@@ -792,6 +878,17 @@ export default {
     const instagramEmbedUrl = getInstagramEmbedRef(target)
     if (instagramEmbedUrl) {
       const html = buildInstagramEmbedHtml(instagramEmbedUrl, target)
+      return new Response(html, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          ...CACHE_HEADERS,
+        },
+      })
+    }
+
+    const steamRef = getSteamWidgetRef(target)
+    if (steamRef) {
+      const html = buildSteamEmbedHtml(steamRef.widgetUrl, steamRef.pageUrl)
       return new Response(html, {
         headers: {
           "content-type": "text/html; charset=utf-8",
