@@ -82,7 +82,7 @@ export function buildCardHtml(opts: {
       bottom: 0;
       max-height: 70%;
       min-width: 0;
-      background: linear-gradient(to top, rgba(0, 0, 0, 0.72), transparent);
+      background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.45) 35%, transparent 100%);
       z-index: 1;
     }
     .card-site {
@@ -137,15 +137,16 @@ export function buildCardHtml(opts: {
       position: relative;
       overflow: hidden;
     }
-    /* Subtle gradient overlay so image/gradient blends into card background */
+    /* Neutral overlay: readable on both light and dark images */
     .card-link::after {
       content: "";
       position: absolute;
       inset: 0;
       background: linear-gradient(
         to top,
-        var(--card-bg-blend) 0%,
-        transparent 45%
+        rgba(0, 0, 0, 0.5) 0%,
+        rgba(0, 0, 0, 0.12) 40%,
+        transparent 70%
       );
       pointer-events: none;
       z-index: 0.5;
@@ -160,7 +161,6 @@ export function buildCardHtml(opts: {
     /* Default: dark theme (gray, similar to base) */
     .card {
       --card-bg: linear-gradient(145deg, #2c2c2c 0%, #242424 100%);
-      --card-bg-blend: rgba(28, 32, 44, 0.4);
       --card-fg: #e8e8e8;
       --card-fg-muted: #98989d;
       --card-accent: #b0b0b0;
@@ -170,7 +170,6 @@ export function buildCardHtml(opts: {
     @media (prefers-color-scheme: light) {
       .card {
         --card-bg: linear-gradient(145deg, #f5f5f5 0%, #ebebeb 100%);
-        --card-bg-blend: rgba(245, 245, 245, 0.65);
         --card-fg: #1c1c1e;
         --card-fg-muted: #48484a;
         --card-accent: #636366;
