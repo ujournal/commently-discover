@@ -47,7 +47,8 @@ export function buildFacebookEmbedHtml(
   <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v3.2"></script>`,
     fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Facebook"),
     fallbackHref: postUrl,
-    wrapperStyle: ".embed-wrap .fb-post { margin: 0 auto; }",
+    wrapperStyle: `.embed-wrap .fb-post { margin: 0 auto; background-color: #fff; }
+    .embed-wrap { padding: 1rem 1rem 1rem 0; max-width: 500px; }`,
   });
 }
 
@@ -82,7 +83,8 @@ export function buildSteamEmbedHtml(
     bodyContent: `    <iframe src="${safeWidgetUrl}" title="Steam store widget"></iframe>`,
     fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Steam"),
     fallbackHref: pageUrl,
-    bodyStyle: "display: flex; flex-direction: column; justify-content: center;",
+    bodyStyle:
+      "display: flex; flex-direction: column; justify-content: center;",
     wrapperStyle: `.embed-wrap { padding: 1rem; width: 100%; display: flex; flex-direction: column; align-items: center; }
     .embed-wrap iframe { width: 100%; height: 200px; }`,
     resizeScript: EMBED_RESIZE_SCRIPT_MAX_HEIGHT,
