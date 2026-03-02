@@ -8,7 +8,9 @@ export function decodeHtmlEntities(s: string): string {
     .replace(/&gt;/gi, ">")
     .replace(/&amp;/gi, "&")
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
-    .replace(/&#x([0-9a-f]+);/gi, (_, n) => String.fromCharCode(parseInt(n, 16)))
+    .replace(/&#x([0-9a-f]+);/gi, (_, n) =>
+      String.fromCharCode(parseInt(n, 16)),
+    );
 }
 
 export function escapeHtml(s: string): string {
@@ -17,10 +19,10 @@ export function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
+    .replace(/'/g, "&#39;");
 }
 
 /** Decode entities then escape for safe HTML output. */
 export function prepareText(s: string): string {
-  return escapeHtml(decodeHtmlEntities(s))
+  return escapeHtml(decodeHtmlEntities(s));
 }

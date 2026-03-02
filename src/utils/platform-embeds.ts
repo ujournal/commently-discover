@@ -2,6 +2,8 @@ import { EMBED_RESIZE_SCRIPT_MAX_HEIGHT } from "./constants";
 import { buildEmbedPageHtml } from "./embed-page";
 import { escapeHtml } from "./html";
 import { getViewInPlatformLabel } from "./i18n";
+import type { BasicRef } from "./platform-refs";
+import { buildCardHtml } from "./card";
 
 /** Build HTML page that embeds a Twitter/X tweet (programmatic API + fallback link so it's never blank). */
 export function buildTwitterEmbedHtml(
@@ -175,4 +177,9 @@ export function buildRedditEmbedHtml(
     wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 640px; }
     .embed-wrap blockquote { margin: 0 auto; }`,
   });
+}
+
+/** Build HTML for the basic (non-platform) link card from getBasicRef result. */
+export function buildBasicEmbedHtml(ref: BasicRef): string {
+  return buildCardHtml(ref);
 }

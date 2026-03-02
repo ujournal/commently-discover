@@ -1,4 +1,47 @@
-import { host } from "./url"
+import { unfurl } from "cloudflare-workers-unfurl";
+import {
+  MAX_FAVICON_BYTES,
+  MAX_IMAGE_BYTES,
+} from "./constants";
+import { fetchAsBase64 } from "./image";
+import { shimSiteData } from "./shim";
+import { unfurlFallback } from "./unfurl";
+import { getSiteName, host } from "./url";
+
+/** Ref data for the basic (non-platform) link card: title, description, images, url, siteName. */
+export type BasicRef = {
+  title: string | undefined;
+  description: string | undefined;
+  imageDataUrl: string | null;
+  faviconDataUrl: string | null;
+  url: string;
+  siteName: string;
+};
+
+/** Unfurl URL (with fallback/shim), fetch images as base64; returns ref for buildBasicEmbedHtml. */
+export async function getBasicRef(target: string): Promise<BasicRef> {
+  let result = await unfurl(target);
+  if (!result.ok && result.error === "failed-fetch") {
+    const fallback = await unfurlFallback(target);
+    if (fallback) {
+      result = { ok: true, value: fallback };
+    }
+  }
+  const data = result.ok ? result.value : shimSiteData(target);
+  const siteName = getSiteName(target);
+  const [imageDataUrl, faviconDataUrl] = await Promise.all([
+    data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
+    data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
+  ]);
+  return {
+    title: data.title,
+    description: data.description,
+    imageDataUrl: imageDataUrl?.dataUrl ?? null,
+    faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
+    url: target,
+    siteName,
+  };
+}
 
 /** Facebook post URL for the Embedded Post plugin, or null. */
 export function getFacebookPostRef(url: string): string | null {

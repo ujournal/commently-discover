@@ -1,13 +1,8 @@
-import { unfurl } from "cloudflare-workers-unfurl";
 import { buildCardHtml } from "./utils/card";
-import {
-  CACHE_HEADERS,
-  MAX_FAVICON_BYTES,
-  MAX_IMAGE_BYTES,
-} from "./utils/constants";
+import { CACHE_HEADERS } from "./utils/constants";
 import { getEmbedUrl } from "./utils/embed-url";
-import { fetchAsBase64 } from "./utils/image";
 import {
+  buildBasicEmbedHtml,
   buildFacebookEmbedHtml,
   buildInstagramEmbedHtml,
   buildRedditEmbedHtml,
@@ -18,6 +13,7 @@ import {
   buildTwitterEmbedHtml,
 } from "./utils/platform-embeds";
 import {
+  getBasicRef,
   getFacebookPostRef,
   getInstagramEmbedRef,
   getRedditPostRef,
@@ -27,9 +23,6 @@ import {
   getTikTokVideoRef,
   getTwitterStatusRef,
 } from "./utils/platform-refs";
-import { shimSiteData } from "./utils/shim";
-import { unfurlFallback } from "./utils/unfurl";
-import { getSiteName } from "./utils/url";
 
 export type { EmbedPageOptions } from "./utils/embed-page";
 
@@ -162,32 +155,8 @@ export default {
       return Response.redirect(embedUrl, 302);
     }
 
-    let result = await unfurl(target);
-
-    if (!result.ok && result.error === "failed-fetch") {
-      const fallback = await unfurlFallback(target);
-      if (fallback) {
-        result = { ok: true, value: fallback };
-      }
-    }
-
-    // On any unfurl failure (bad-param, failed-fetch, etc.) use shim data and return a card, never JSON
-    const data = result.ok ? result.value : shimSiteData(target);
-    const siteName = getSiteName(target);
-
-    const [imageDataUrl, faviconDataUrl] = await Promise.all([
-      data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
-      data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
-    ]);
-
-    const html = buildCardHtml({
-      title: data.title,
-      description: data.description,
-      imageDataUrl: imageDataUrl?.dataUrl ?? null,
-      faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
-      url: target,
-      siteName,
-    });
+    const ref = await getBasicRef(target);
+    const html = buildBasicEmbedHtml(ref);
 
     return new Response(html, {
       headers,

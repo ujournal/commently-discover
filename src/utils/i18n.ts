@@ -23,28 +23,31 @@ const VIEW_IN_PLATFORM: Record<string, string> = {
   cs: "Zobrazit v {0}",
   hu: "Megtekintés itt: {0}",
   ro: "Vizualizează în {0}",
-}
+};
 
 /** Parse Accept-Language and return the first supported locale (e.g. "en", "uk"), or "en". */
 export function getPreferredLocale(acceptLanguage: string | null): string {
-  if (!acceptLanguage?.trim()) return "en"
-  const supported = new Set(Object.keys(VIEW_IN_PLATFORM))
+  if (!acceptLanguage?.trim()) return "en";
+  const supported = new Set(Object.keys(VIEW_IN_PLATFORM));
   const parts = acceptLanguage.split(",").map((p) => {
-    const [locale, q] = p.trim().split(";q=")
-    const lang = (locale || "").split("-")[0].toLowerCase()
-    const quality = q ? parseFloat(q) : 1
-    return { lang, full: lang, quality }
-  })
-  parts.sort((a, b) => b.quality - a.quality)
+    const [locale, q] = p.trim().split(";q=");
+    const lang = (locale || "").split("-")[0].toLowerCase();
+    const quality = q ? parseFloat(q) : 1;
+    return { lang, full: lang, quality };
+  });
+  parts.sort((a, b) => b.quality - a.quality);
   for (const { lang } of parts) {
-    if (supported.has(lang)) return lang
+    if (supported.has(lang)) return lang;
   }
-  return "en"
+  return "en";
 }
 
 /** Return translated "View in {platformName}" for the given locale; fallback to English. */
-export function getViewInPlatformLabel(acceptLanguage: string | null, platformName: string): string {
-  const locale = getPreferredLocale(acceptLanguage)
-  const template = VIEW_IN_PLATFORM[locale] ?? VIEW_IN_PLATFORM.en
-  return template.replace("{0}", platformName)
+export function getViewInPlatformLabel(
+  acceptLanguage: string | null,
+  platformName: string,
+): string {
+  const locale = getPreferredLocale(acceptLanguage);
+  const template = VIEW_IN_PLATFORM[locale] ?? VIEW_IN_PLATFORM.en;
+  return template.replace("{0}", platformName);
 }
