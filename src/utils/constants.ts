@@ -3,8 +3,7 @@ export const MAX_FAVICON_BYTES = 256 * 1024; // 256KB for favicon
 export const IMAGE_FETCH_TIMEOUT_MS = 5000;
 
 export const CACHE_HEADERS = {
-  "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
-  "CDN-Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
+  "Cache-Control": "public, s-maxage=31536000, immutable",
 };
 
 /** Script injected into embed pages: sends scroll height to parent via postMessage so outer frame can resize iframe. */
