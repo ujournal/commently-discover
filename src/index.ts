@@ -166,7 +166,9 @@ export default {
 
     if (!result.ok && result.error === "failed-fetch") {
       const fallback = await unfurlFallback(target);
-      if (fallback) result = { ok: true, value: fallback };
+      if (fallback) {
+        result = { ok: true, value: fallback };
+      }
     }
 
     // On any unfurl failure (bad-param, failed-fetch, etc.) use shim data and return a card, never JSON
