@@ -1,12 +1,9 @@
 import { unfurl } from "cloudflare-workers-unfurl";
-import {
-  MAX_FAVICON_BYTES,
-  MAX_IMAGE_BYTES,
-} from "./constants";
+import { MAX_FAVICON_BYTES, MAX_IMAGE_BYTES } from "./constants";
 import { fetchAsBase64 } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
-import { getSiteName, host } from "./url";
+import { getSiteName, host, fileTypeTitleFromPath } from "./url";
 
 /** Ref data for the basic (non-platform) link card: title, description, images, url, siteName. */
 export type BasicRef = {
@@ -29,12 +26,20 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
   }
   const data = result.ok ? result.value : shimSiteData(target);
   const siteName = getSiteName(target);
+  let title = data.title;
+  try {
+    const u = new URL(target);
+    const fileTitle = fileTypeTitleFromPath(u.pathname);
+    if (fileTitle) title = fileTitle;
+  } catch {
+    // ignore URL parse errors; fall back to existing title
+  }
   const [imageDataUrl, faviconDataUrl] = await Promise.all([
     data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
     data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
   ]);
   return {
-    title: data.title,
+    title,
     description: data.description,
     imageDataUrl: imageDataUrl?.dataUrl ?? null,
     faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
@@ -46,155 +51,177 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
 /** Facebook post URL for the Embedded Post plugin, or null. */
 export function getFacebookPostRef(url: string): string | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "facebook.com" && h !== "fb.com" && h !== "m.facebook.com") return null
-    const path = u.pathname.replace(/^\/+|\/+$/, "")
-    if (!path) return null
-    return u.href
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "facebook.com" && h !== "fb.com" && h !== "m.facebook.com")
+      return null;
+    const path = u.pathname.replace(/^\/+|\/+$/, "");
+    if (!path) return null;
+    return u.href;
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Twitter/X status: { id, href } or null. */
-export function getTwitterStatusRef(url: string): { id: string; href: string } | null {
+export function getTwitterStatusRef(
+  url: string,
+): { id: string; href: string } | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "twitter.com" && h !== "x.com") return null
-    const m = u.pathname.match(/\/status\/(\d+)/)
-    if (!m) return null
-    return { id: m[1], href: u.href }
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "twitter.com" && h !== "x.com") return null;
+    const m = u.pathname.match(/\/status\/(\d+)/);
+    if (!m) return null;
+    return { id: m[1], href: u.href };
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Telegram post ref for the official widget (channel/postid). Returns null if not a Telegram post URL. */
 export function getTelegramPostRef(url: string): string | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "t.me" && h !== "telegram.me" && h !== "telegram.dog") return null
-    const path = u.pathname.replace(/^\/+|\/+$/, "")
-    const parts = path.split("/").filter(Boolean)
-    if (parts.length >= 2) return parts.join("/") // e.g. "durov/43" or "c/1234567890/99"
-    return null
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "t.me" && h !== "telegram.me" && h !== "telegram.dog")
+      return null;
+    const path = u.pathname.replace(/^\/+|\/+$/, "");
+    const parts = path.split("/").filter(Boolean);
+    if (parts.length >= 2) return parts.join("/"); // e.g. "durov/43" or "c/1234567890/99"
+    return null;
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Instagram post/reel embed URL for wrapper page, or null. */
 export function getInstagramEmbedRef(url: string): string | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "instagram.com" && h !== "www.instagram.com") return null
-    const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/)
-    if (!m) return null
-    const path = u.pathname.replace(/\/+$/, "").split("/").slice(0, 4).join("/")
-    return `https://www.instagram.com${path}/embed/`
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "instagram.com" && h !== "www.instagram.com") return null;
+    const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
+    if (!m) return null;
+    const path = u.pathname
+      .replace(/\/+$/, "")
+      .split("/")
+      .slice(0, 4)
+      .join("/");
+    return `https://www.instagram.com${path}/embed/`;
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Threads post URL for the official embed (blockquote + embed.js). Returns the post URL or null. */
 export function getThreadsPostRef(url: string): string | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    const isThreads = h === "threads.net" || h === "www.threads.net" || h === "threads.com" || h === "www.threads.com"
-    if (!isThreads) return null
+    const u = new URL(url);
+    const h = host(u);
+    const isThreads =
+      h === "threads.net" ||
+      h === "www.threads.net" ||
+      h === "threads.com" ||
+      h === "www.threads.com";
+    if (!isThreads) return null;
     // Format: /@username/post/{media-shortcode}/ or /t/{conversation-id}
-    const path = u.pathname.replace(/^\/+|\/+$/, "")
-    const parts = path.split("/").filter(Boolean)
-    const canonical = "https://www.threads.net"
-    if (parts.length >= 2 && parts[0].startsWith("@") && parts[1] === "post" && parts[2]) {
-      return `${canonical}/${parts[0]}/post/${parts[2]}/`
+    const path = u.pathname.replace(/^\/+|\/+$/, "");
+    const parts = path.split("/").filter(Boolean);
+    const canonical = "https://www.threads.net";
+    if (
+      parts.length >= 2 &&
+      parts[0].startsWith("@") &&
+      parts[1] === "post" &&
+      parts[2]
+    ) {
+      return `${canonical}/${parts[0]}/post/${parts[2]}/`;
     }
     if (parts[0] === "t" && parts[1]) {
-      return `${canonical}/t/${parts[1]}/`
+      return `${canonical}/t/${parts[1]}/`;
     }
-    return null
+    return null;
   } catch {
-    return null
+    return null;
   }
 }
 
 /** TikTok video: video ID and canonical URL for embed page (same pattern as tg/x/reddit). */
 export function getTikTokVideoRef(url: string): {
-  videoId: string
-  videoUrl: string
+  videoId: string;
+  videoUrl: string;
 } | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "tiktok.com" && h !== "www.tiktok.com") return null
-    const m = u.pathname.match(/\/video\/(\d+)/)
-    if (!m) return null
-    const videoId = m[1]
-    const canonical = `https://www.tiktok.com${u.pathname.replace(/\/+$/, "")}`
-    return { videoId, videoUrl: canonical }
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "tiktok.com" && h !== "www.tiktok.com") return null;
+    const m = u.pathname.match(/\/video\/(\d+)/);
+    if (!m) return null;
+    const videoId = m[1];
+    const canonical = `https://www.tiktok.com${u.pathname.replace(/\/+$/, "")}`;
+    return { videoId, videoUrl: canonical };
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Reddit post: embed URL, post URL, subreddit, and optional title slug for the official blockquote embed. */
 export function getRedditPostRef(url: string): {
-  embedUrl: string
-  postUrl: string
-  subreddit: string
-  titleSlug: string | null
+  embedUrl: string;
+  postUrl: string;
+  subreddit: string;
+  titleSlug: string | null;
 } | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
+    const u = new URL(url);
+    const h = host(u);
     if (
       h !== "reddit.com" &&
       h !== "www.reddit.com" &&
       h !== "old.reddit.com" &&
       h !== "new.reddit.com"
     )
-      return null
-    const path = u.pathname.replace(/^\/+|\/+$/, "")
-    const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)(?:\/(.*))?$/)
-    if (!m) return null
-    const subreddit = m[1]
-    const titleSlug = m[3] && m[3].length > 0 ? m[3] : null
-    const pathNorm = path.replace(/\/+$/, "")
-    const pathWithSlash = pathNorm ? `/${pathNorm}/` : "/"
-    const canonical = "https://www.reddit.com"
-    const pathNoTrailing = pathWithSlash.replace(/\/$/, "")
-    const singleTrailing = (url: string) => url.replace(/\/+$/, "/")
+      return null;
+    const path = u.pathname.replace(/^\/+|\/+$/, "");
+    const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)(?:\/(.*))?$/);
+    if (!m) return null;
+    const subreddit = m[1];
+    const titleSlug = m[3] && m[3].length > 0 ? m[3] : null;
+    const pathNorm = path.replace(/\/+$/, "");
+    const pathWithSlash = pathNorm ? `/${pathNorm}/` : "/";
+    const canonical = "https://www.reddit.com";
+    const pathNoTrailing = pathWithSlash.replace(/\/$/, "");
+    const singleTrailing = (url: string) => url.replace(/\/+$/, "/");
     return {
-      embedUrl: singleTrailing(new URL(`${pathNoTrailing}/embed`, canonical).href),
+      embedUrl: singleTrailing(
+        new URL(`${pathNoTrailing}/embed`, canonical).href,
+      ),
       postUrl: singleTrailing(new URL(pathWithSlash, canonical).href),
       subreddit,
       titleSlug,
-    }
+    };
   } catch {
-    return null
+    return null;
   }
 }
 
 /** Steam store app ref: widget URL for store.steampowered.com/app/ID or steamcommunity.com/app/ID, or null. */
-export function getSteamWidgetRef(url: string): { widgetUrl: string; pageUrl: string } | null {
+export function getSteamWidgetRef(
+  url: string,
+): { widgetUrl: string; pageUrl: string } | null {
   try {
-    const u = new URL(url)
-    const h = host(u)
-    if (h !== "store.steampowered.com" && h !== "steamcommunity.com") return null
-    const appMatch = u.pathname.match(/\/app\/(\d+)/)
-    if (!appMatch) return null
-    const appId = appMatch[1]
+    const u = new URL(url);
+    const h = host(u);
+    if (h !== "store.steampowered.com" && h !== "steamcommunity.com")
+      return null;
+    const appMatch = u.pathname.match(/\/app\/(\d+)/);
+    if (!appMatch) return null;
+    const appId = appMatch[1];
     return {
       widgetUrl: `https://store.steampowered.com/widget/${appId}/`,
       pageUrl: u.href,
-    }
+    };
   } catch {
-    return null
+    return null;
   }
 }
