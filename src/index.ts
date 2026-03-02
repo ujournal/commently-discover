@@ -33,6 +33,11 @@ import { getSiteName } from "./utils/url";
 
 export type { EmbedPageOptions } from "./utils/embed-page";
 
+const headers = {
+  "content-type": "text/html; charset=utf-8",
+  ...CACHE_HEADERS,
+};
+
 export default {
   async fetch(request: Request): Promise<Response> {
     const { searchParams } = new URL(request.url);
@@ -75,10 +80,7 @@ export default {
         acceptLanguage,
       );
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -86,10 +88,7 @@ export default {
     if (facebookPostUrl) {
       const html = buildFacebookEmbedHtml(facebookPostUrl, acceptLanguage);
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -101,10 +100,7 @@ export default {
         acceptLanguage,
       );
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -116,10 +112,7 @@ export default {
         acceptLanguage,
       );
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -127,10 +120,7 @@ export default {
     if (telegramPostRef) {
       const html = buildTelegramEmbedHtml(telegramPostRef, acceptLanguage);
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -138,10 +128,7 @@ export default {
     if (threadsPostUrl) {
       const html = buildThreadsEmbedHtml(threadsPostUrl, acceptLanguage);
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -154,10 +141,7 @@ export default {
         acceptLanguage,
       );
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -169,10 +153,7 @@ export default {
         acceptLanguage,
       );
       return new Response(html, {
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          ...CACHE_HEADERS,
-        },
+        headers,
       });
     }
 
@@ -182,18 +163,13 @@ export default {
     }
 
     let result = await unfurl(target);
+
     if (!result.ok && result.error === "failed-fetch") {
       const fallback = await unfurlFallback(target);
       if (fallback) result = { ok: true, value: fallback };
     }
 
-    if (!result.ok && result.error === "bad-param") {
-      return new Response(JSON.stringify({ error: result.error }), {
-        status: 400,
-        headers: { "content-type": "application/json" },
-      });
-    }
-
+    // On any unfurl failure (bad-param, failed-fetch, etc.) use shim data and return a card, never JSON
     const data = result.ok ? result.value : shimSiteData(target);
     const siteName = getSiteName(target);
 
@@ -212,10 +188,7 @@ export default {
     });
 
     return new Response(html, {
-      headers: {
-        "content-type": "text/html; charset=utf-8",
-        ...CACHE_HEADERS,
-      },
+      headers,
     });
   },
 };
