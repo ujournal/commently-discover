@@ -125,6 +125,28 @@ export function buildThreadsEmbedHtml(
   });
 }
 
+/** Build HTML page that embeds a TikTok video via blockquote + embed.js (same pattern as Reddit). */
+export function buildTikTokEmbedHtml(
+  videoId: string,
+  videoUrl: string,
+  acceptLanguage: string | null,
+): string {
+  const safeVideoId = escapeHtml(videoId);
+  const safeVideoUrl = escapeHtml(videoUrl);
+  return buildEmbedPageHtml({
+    title: "TikTok video",
+    bodyContent: `  <blockquote class="tiktok-embed" cite="${safeVideoUrl}" data-video-id="${safeVideoId}" style="max-width: 605px;min-width: 325px;">
+  <a href="${safeVideoUrl}">TikTok video</a>
+</blockquote>
+  <script async src="https://www.tiktok.com/embed.js"></script>`,
+    fallbackLabel: getViewInPlatformLabel(acceptLanguage, "TikTok"),
+    fallbackHref: videoUrl,
+    bodyStyle: "background: #fff;",
+    wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 640px; }
+    .embed-wrap blockquote { margin: 0 auto; }`,
+  });
+}
+
 /** Lowercase percent-encoding in a URL so it matches Reddit's embed format (e.g. %d1%87 not %D1%87). */
 function redditEmbedHref(url: string): string {
   return url.replace(/%[0-9A-Fa-f]{2}/g, (m) => m.toLowerCase());

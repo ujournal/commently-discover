@@ -49,12 +49,8 @@ export function getEmbedUrl(url: string): string | null {
       return null
     }
 
-    // TikTok: tiktok.com/@user/video/1234567890123456789
-    if (h === "tiktok.com" || h === "www.tiktok.com") {
-      const m = u.pathname.match(/\/video\/(\d+)/)
-      if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`
-      return null
-    }
+    // TikTok: handled via HTML page with iframe (same pattern as Instagram/Reddit)
+    if (h === "tiktok.com" || h === "www.tiktok.com") return null
 
     // Dailymotion: dailymotion.com/video/x5abcde
     if (h === "dailymotion.com" || h === "www.dailymotion.com") {

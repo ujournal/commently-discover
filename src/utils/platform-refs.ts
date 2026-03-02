@@ -81,6 +81,25 @@ export function getThreadsPostRef(url: string): string | null {
   }
 }
 
+/** TikTok video: video ID and canonical URL for embed page (same pattern as tg/x/reddit). */
+export function getTikTokVideoRef(url: string): {
+  videoId: string
+  videoUrl: string
+} | null {
+  try {
+    const u = new URL(url)
+    const h = host(u)
+    if (h !== "tiktok.com" && h !== "www.tiktok.com") return null
+    const m = u.pathname.match(/\/video\/(\d+)/)
+    if (!m) return null
+    const videoId = m[1]
+    const canonical = `https://www.tiktok.com${u.pathname.replace(/\/+$/, "")}`
+    return { videoId, videoUrl: canonical }
+  } catch {
+    return null
+  }
+}
+
 /** Reddit post: embed URL, post URL, subreddit, and optional title slug for the official blockquote embed. */
 export function getRedditPostRef(url: string): {
   embedUrl: string

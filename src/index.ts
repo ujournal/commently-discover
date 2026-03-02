@@ -14,6 +14,7 @@ import {
   buildSteamEmbedHtml,
   buildTelegramEmbedHtml,
   buildThreadsEmbedHtml,
+  buildTikTokEmbedHtml,
   buildTwitterEmbedHtml,
 } from "./utils/platform-embeds";
 import {
@@ -23,6 +24,7 @@ import {
   getSteamWidgetRef,
   getTelegramPostRef,
   getThreadsPostRef,
+  getTikTokVideoRef,
   getTwitterStatusRef,
 } from "./utils/platform-refs";
 import { shimSiteData } from "./utils/shim";
@@ -149,6 +151,21 @@ export default {
         redditRef.postUrl,
         redditRef.subreddit,
         redditRef.titleSlug,
+        acceptLanguage,
+      );
+      return new Response(html, {
+        headers: {
+          "content-type": "text/html; charset=utf-8",
+          ...CACHE_HEADERS,
+        },
+      });
+    }
+
+    const tiktokRef = getTikTokVideoRef(target);
+    if (tiktokRef) {
+      const html = buildTikTokEmbedHtml(
+        tiktokRef.videoId,
+        tiktokRef.videoUrl,
         acceptLanguage,
       );
       return new Response(html, {
