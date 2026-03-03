@@ -1,36 +1,10 @@
 import { buildCardHtml } from "./utils/card";
-import { CACHE_HEADERS } from "./utils/constants";
-import { getEmbedUrl } from "./utils/embed-url";
 import { getUrlFromBase64PathSegment } from "./utils/url";
-import {
-  buildBasicEmbedHtml,
-  buildFacebookEmbedHtml,
-  buildInstagramEmbedHtml,
-  buildRedditEmbedHtml,
-  buildSteamEmbedHtml,
-  buildTelegramEmbedHtml,
-  buildThreadsEmbedHtml,
-  buildTikTokEmbedHtml,
-  buildTwitterEmbedHtml,
-} from "./utils/platform-embeds";
-import {
-  getBasicRef,
-  getFacebookPostRef,
-  getInstagramEmbedRef,
-  getRedditPostRef,
-  getSteamWidgetRef,
-  getTelegramPostRef,
-  getThreadsPostRef,
-  getTikTokVideoRef,
-  getTwitterStatusRef,
-} from "./utils/platform-refs";
+import { runProcessors } from "./processors";
 
 export type { EmbedPageOptions } from "./utils/embed-page";
-
-const headers = {
-  "content-type": "text/html; charset=utf-8",
-  ...CACHE_HEADERS,
-};
+export type { Processor, ProcessorContext, ProcessorResult } from "./processors";
+export { runProcessors, defaultProcessors } from "./processors";
 
 export default {
   async fetch(request: Request): Promise<Response> {
@@ -68,103 +42,8 @@ export default {
       });
     }
 
-    const acceptLanguage = request.headers.get("Accept-Language");
-
-    const twitterStatus = getTwitterStatusRef(target);
-    if (twitterStatus) {
-      const html = buildTwitterEmbedHtml(
-        twitterStatus.id,
-        twitterStatus.href,
-        acceptLanguage,
-      );
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const facebookPostUrl = getFacebookPostRef(target);
-    if (facebookPostUrl) {
-      const html = buildFacebookEmbedHtml(facebookPostUrl, acceptLanguage);
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const instagramEmbedUrl = getInstagramEmbedRef(target);
-    if (instagramEmbedUrl) {
-      const html = buildInstagramEmbedHtml(
-        instagramEmbedUrl,
-        target,
-        acceptLanguage,
-      );
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const steamRef = getSteamWidgetRef(target);
-    if (steamRef) {
-      const html = buildSteamEmbedHtml(
-        steamRef.widgetUrl,
-        steamRef.pageUrl,
-        acceptLanguage,
-      );
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const telegramPostRef = getTelegramPostRef(target);
-    if (telegramPostRef) {
-      const html = buildTelegramEmbedHtml(telegramPostRef, acceptLanguage);
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const threadsPostUrl = getThreadsPostRef(target);
-    if (threadsPostUrl) {
-      const html = buildThreadsEmbedHtml(threadsPostUrl, acceptLanguage);
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const redditRef = getRedditPostRef(target);
-    if (redditRef) {
-      const html = buildRedditEmbedHtml(
-        redditRef.postUrl,
-        redditRef.subreddit,
-        redditRef.titleSlug,
-        acceptLanguage,
-      );
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const tiktokRef = getTikTokVideoRef(target);
-    if (tiktokRef) {
-      const html = buildTikTokEmbedHtml(
-        tiktokRef.videoId,
-        tiktokRef.videoUrl,
-        acceptLanguage,
-      );
-      return new Response(html, {
-        headers,
-      });
-    }
-
-    const embedUrl = getEmbedUrl(target);
-    if (embedUrl) {
-      return Response.redirect(embedUrl, 302);
-    }
-
-    const ref = await getBasicRef(target);
-    const html = buildBasicEmbedHtml(ref);
-
-    return new Response(html, {
-      headers,
+    return runProcessors(target, {
+      acceptLanguage: request.headers.get("Accept-Language"),
     });
   },
 };
