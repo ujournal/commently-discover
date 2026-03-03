@@ -10,7 +10,15 @@ export function getUrlFromBase64PathSegment(pathname: string): string | null {
   if (!raw) return null;
   try {
     const decoded = atob(raw.replace(/-/g, "+").replace(/_/g, "/"));
-    const s = decoded.trim();
+    let s = decoded.trim();
+    // Base64 may encode a percent-encoded URL (e.g. https%3A%2F%2F...)
+    if ((s.startsWith("http%3A") || s.startsWith("https%3A")) && s.includes("%")) {
+      try {
+        s = decodeURIComponent(s);
+      } catch {
+        /* use s as-is */
+      }
+    }
     if (s.startsWith("http://") || s.startsWith("https://")) return s;
     return null;
   } catch {

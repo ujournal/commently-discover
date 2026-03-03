@@ -1,4 +1,4 @@
-/** Decode HTML entities so text displays with proper symbols (e.g. &quot; → "). */
+/** Decode HTML entities so text displays with proper symbols (e.g. &quot; → ", &ndash; → –). */
 export function decodeHtmlEntities(s: string): string {
   return s
     .replace(/&quot;/gi, '"')
@@ -7,6 +7,14 @@ export function decodeHtmlEntities(s: string): string {
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">")
     .replace(/&amp;/gi, "&")
+    .replace(/&ndash;/gi, "–")
+    .replace(/&mdash;/gi, "—")
+    .replace(/&nbsp;/gi, "\u00A0")
+    .replace(/&hellip;/gi, "…")
+    .replace(/&rsquo;/gi, "'")
+    .replace(/&lsquo;/gi, "'")
+    .replace(/&rdquo;/gi, '"')
+    .replace(/&ldquo;/gi, '"')
     .replace(/&#(\d+);/g, (_, n) => String.fromCharCode(parseInt(n, 10)))
     .replace(/&#x([0-9a-f]+);/gi, (_, n) =>
       String.fromCharCode(parseInt(n, 16)),
