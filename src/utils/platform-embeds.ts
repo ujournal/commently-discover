@@ -54,22 +54,26 @@ export function buildFacebookEmbedHtml(
   });
 }
 
-/** Build HTML page that embeds an Instagram post/reel in an iframe with height resize message (same pattern as tg/fb/x). */
+/** Build HTML page that embeds an Instagram post/reel via official blockquote + embed.js (same pattern as Threads/Twitter). */
 export function buildInstagramEmbedHtml(
-  embedUrl: string,
+  _embedUrl: string,
   postUrl: string,
   acceptLanguage: string | null,
 ): string {
-  const safeEmbedUrl = escapeHtml(embedUrl);
+  const safePermalink = escapeHtml(postUrl);
   return buildEmbedPageHtml({
     title: "Instagram post",
-    bodyContent: `    <iframe src="${safeEmbedUrl}" title="Instagram post" scrolling="no"></iframe>`,
+    bodyContent: `  <blockquote class="instagram-media" data-instgrm-permalink="${safePermalink}" data-instgrm-version="14" style="width:100%; max-width:540px; margin: 0 auto;"></blockquote>
+  <script async src="https://www.instagram.com/embed.js"></script>
+  <script>
+    if (window.instgrm) {
+      window.instgrm.Embeds.process();
+    }
+  </script>`,
     fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Instagram"),
     fallbackHref: postUrl,
-    bodyStyle: "overflow: hidden;",
-    wrapperStyle: `.embed-wrap { overflow: hidden; padding: 1rem; }
-    .embed-wrap iframe { width: 100%; height: 800px; overflow: hidden; outline: 1px solid rgba(0, 0, 0, 0.08); outline-offset: -1px; border-radius: 0.5rem; }
-    @media (prefers-color-scheme: dark) { .embed-wrap iframe { outline-color: rgba(255, 255, 255, 0.08); } }`,
+    wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 540px; margin: 0 auto; }
+    .embed-wrap blockquote { margin: 0 auto; }`,
   });
 }
 
