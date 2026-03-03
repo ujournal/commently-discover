@@ -1,6 +1,7 @@
 import { buildCardHtml } from "./utils/card";
 import { CACHE_HEADERS } from "./utils/constants";
 import { getEmbedUrl } from "./utils/embed-url";
+import { getUrlFromBase64PathSegment } from "./utils/url";
 import {
   buildBasicEmbedHtml,
   buildFacebookEmbedHtml,
@@ -33,8 +34,12 @@ const headers = {
 
 export default {
   async fetch(request: Request): Promise<Response> {
-    const { searchParams } = new URL(request.url);
+    const requestUrl = new URL(request.url);
+    const { searchParams } = requestUrl;
     let target = searchParams.get("url");
+    if (!target) {
+      target = getUrlFromBase64PathSegment(requestUrl.pathname);
+    }
     // Handle double-encoded url param (e.g. %253A → %3A, %2525 → %25)
     if (target && target.includes("%25")) {
       try {

@@ -1,3 +1,23 @@
+/**
+ * Decode a URL from a base64-encoded path segment.
+ * Path can be a single segment (e.g. "/aHR0cHM6Ly9leGFtcGxlLmNvbS8=") or multiple (e.g. "/d/aHR0c...");
+ * the last non-empty segment is treated as base64.
+ * Returns the decoded URL if valid http(s), else null.
+ */
+export function getUrlFromBase64PathSegment(pathname: string): string | null {
+  const segments = pathname.replace(/^\/+|\/+$/, "").split("/").filter(Boolean);
+  const raw = segments[segments.length - 1];
+  if (!raw) return null;
+  try {
+    const decoded = atob(raw.replace(/-/g, "+").replace(/_/g, "/"));
+    const s = decoded.trim();
+    if (s.startsWith("http://") || s.startsWith("https://")) return s;
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 /** Normalize host (no www). */
 export function host(url: URL): string {
   return url.hostname.replace(/^www\./, "");
