@@ -67,13 +67,61 @@ const EXTENSION_TITLES: Record<string, string> = {
   "7z": "7Z archive",
 };
 
+/**
+ * Path-like string for file detection (e.g. pathname, or pathname + hash for #/media/...).
+ * Use with fileTypeTitleFromPath so filenames in the hash are considered.
+ */
+export function getPathForFileDetection(url: URL): string {
+  const path = url.pathname;
+  const hash = url.hash ? url.hash.slice(1) : "";
+  if (!hash || !hash.startsWith("/")) return path;
+  return path + hash;
+}
+
+/**
+ * Decode percent-encoded string without throwing (escape lone % so decodeURIComponent succeeds).
+ * Ensures filenames with valid percent-encoding (e.g. Cyrillic) are decoded for display.
+ */
+function safeDecodeURIComponent(s: string): string {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    // Escape malformed % so decodeURIComponent can decode the rest (e.g. UTF-8 sequences)
+    const escaped = s.replace(/%(?![0-9A-Fa-f]{2})/gi, "%25");
+    try {
+      return decodeURIComponent(escaped);
+    } catch {
+      return s;
+    }
+  }
+}
+
+/**
+ * Last path segment (filename) from pathname + hash, percent-decoded for display.
+ * Returns null if there is no path segment.
+ */
+export function getDecodedFilenameFromUrl(url: URL): string | null {
+  const pathLike = getPathForFileDetection(url);
+  const noQuery = pathLike.split("?", 1)[0] ?? "";
+  const parts = noQuery.split("/").filter(Boolean);
+  if (parts.length === 0) return null;
+  const last = parts[parts.length - 1];
+  if (!last) return null;
+  return safeDecodeURIComponent(last);
+}
+
 export function fileTypeTitleFromPath(pathLike: string): string | null {
   const noHash = pathLike.split("#", 1)[0] ?? "";
   const noQuery = noHash.split("?", 1)[0] ?? "";
   const parts = noQuery.split("/").filter(Boolean);
   if (parts.length === 0) return null;
-  const last = parts[parts.length - 1];
+  let last = parts[parts.length - 1];
   if (!last) return null;
+  try {
+    last = decodeURIComponent(last);
+  } catch {
+    /* use last as-is if not valid percent-encoding */
+  }
 
   const dot = last.lastIndexOf(".");
   if (dot <= 0 || dot === last.length - 1) return null;

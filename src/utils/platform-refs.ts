@@ -3,7 +3,13 @@ import { MAX_FAVICON_BYTES, MAX_IMAGE_BYTES } from "./constants";
 import { fetchAsBase64 } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
-import { getSiteName, host } from "./url";
+import {
+  getPathForFileDetection,
+  getDecodedFilenameFromUrl,
+  getSiteName,
+  host,
+  fileTypeTitleFromPath,
+} from "./url";
 
 /** Ref data for the basic (non-platform) link card: title, description, images, url, siteName. */
 export type BasicRef = {
@@ -29,6 +35,19 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
   // fall back to shim so we can derive a sensible title from the filename (e.g. "PDF file").
   if (!data.title && !data.description && !data.image && !data.favicon) {
     data = shimSiteData(target);
+  }
+  // When we have no title but URL points to a file (e.g. #/media/File.jpg), use decoded filename
+  if (!data.title) {
+    try {
+      const u = new URL(target);
+      const pathForFile = getPathForFileDetection(u);
+      if (fileTypeTitleFromPath(pathForFile)) {
+        const decodedName = getDecodedFilenameFromUrl(u);
+        if (decodedName) data = { ...data, title: decodedName };
+      }
+    } catch {
+      /* ignore */
+    }
   }
   const siteName = getSiteName(target);
   const [imageDataUrl, faviconDataUrl] = await Promise.all([

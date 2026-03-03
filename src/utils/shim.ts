@@ -1,4 +1,9 @@
-import { host, fileTypeTitleFromPath } from "./url";
+import {
+  getDecodedFilenameFromUrl,
+  getPathForFileDetection,
+  host,
+  fileTypeTitleFromPath,
+} from "./url";
 
 /** Shim site data when fetch fails: title and site from URL only. */
 export function shimSiteData(url: string): {
@@ -10,7 +15,11 @@ export function shimSiteData(url: string): {
   try {
     const u = new URL(url);
     const siteName = host(u);
-    const title = fileTypeTitleFromPath(u.pathname) ?? siteName;
+    const pathForFile = getPathForFileDetection(u);
+    const fileTitle = fileTypeTitleFromPath(pathForFile);
+    // When URL points to a file (path or hash), use decoded filename as title
+    const title =
+      (fileTitle ? getDecodedFilenameFromUrl(u) : null) ?? fileTitle ?? siteName;
     return {
       title,
       description: undefined,
