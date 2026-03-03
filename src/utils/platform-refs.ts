@@ -4,11 +4,11 @@ import { fetchAsBase64 } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
 import {
-  getPathForFileDetection,
+  fileTypeTitleFromPath,
   getDecodedFilenameFromUrl,
+  getPathForFileDetection,
   getSiteName,
   host,
-  fileTypeTitleFromPath,
 } from "./url";
 
 /** Ref data for the basic (non-platform) link card: title, description, images, url, siteName. */
@@ -43,7 +43,9 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
       const pathForFile = getPathForFileDetection(u);
       if (fileTypeTitleFromPath(pathForFile)) {
         const decodedName = getDecodedFilenameFromUrl(u);
-        if (decodedName) data = { ...data, title: decodedName };
+        if (decodedName) {
+          data = { ...data, title: decodedName };
+        }
       }
     } catch {
       /* ignore */
@@ -69,10 +71,13 @@ export function getFacebookPostRef(url: string): string | null {
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "facebook.com" && h !== "fb.com" && h !== "m.facebook.com")
+    if (h !== "facebook.com" && h !== "fb.com" && h !== "m.facebook.com") {
       return null;
+    }
     const path = u.pathname.replace(/^\/+|\/+$/, "");
-    if (!path) return null;
+    if (!path) {
+      return null;
+    }
     return u.href;
   } catch {
     return null;
@@ -86,9 +91,13 @@ export function getTwitterStatusRef(
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "twitter.com" && h !== "x.com") return null;
+    if (h !== "twitter.com" && h !== "x.com") {
+      return null;
+    }
     const m = u.pathname.match(/\/status\/(\d+)/);
-    if (!m) return null;
+    if (!m) {
+      return null;
+    }
     return { id: m[1], href: u.href };
   } catch {
     return null;
@@ -100,11 +109,14 @@ export function getTelegramPostRef(url: string): string | null {
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "t.me" && h !== "telegram.me" && h !== "telegram.dog")
+    if (h !== "t.me" && h !== "telegram.me" && h !== "telegram.dog") {
       return null;
+    }
     const path = u.pathname.replace(/^\/+|\/+$/, "");
     const parts = path.split("/").filter(Boolean);
-    if (parts.length >= 2) return parts.join("/"); // e.g. "durov/43" or "c/1234567890/99"
+    if (parts.length >= 2) {
+      return parts.join("/"); // e.g. "durov/43" or "c/1234567890/99"
+    }
     return null;
   } catch {
     return null;
@@ -116,9 +128,13 @@ export function getInstagramEmbedRef(url: string): string | null {
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "instagram.com" && h !== "www.instagram.com") return null;
+    if (h !== "instagram.com" && h !== "www.instagram.com") {
+      return null;
+    }
     const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
-    if (!m) return null;
+    if (!m) {
+      return null;
+    }
     const path = u.pathname
       .replace(/\/+$/, "")
       .split("/")
@@ -140,7 +156,9 @@ export function getThreadsPostRef(url: string): string | null {
       h === "www.threads.net" ||
       h === "threads.com" ||
       h === "www.threads.com";
-    if (!isThreads) return null;
+    if (!isThreads) {
+      return null;
+    }
     // Format: /@username/post/{media-shortcode}/ or /t/{conversation-id}
     const path = u.pathname.replace(/^\/+|\/+$/, "");
     const parts = path.split("/").filter(Boolean);
@@ -170,9 +188,13 @@ export function getTikTokVideoRef(url: string): {
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "tiktok.com" && h !== "www.tiktok.com") return null;
+    if (h !== "tiktok.com" && h !== "www.tiktok.com") {
+      return null;
+    }
     const m = u.pathname.match(/\/video\/(\d+)/);
-    if (!m) return null;
+    if (!m) {
+      return null;
+    }
     const videoId = m[1];
     const canonical = `https://www.tiktok.com${u.pathname.replace(/\/+$/, "")}`;
     return { videoId, videoUrl: canonical };
@@ -200,7 +222,9 @@ export function getRedditPostRef(url: string): {
       return null;
     const path = u.pathname.replace(/^\/+|\/+$/, "");
     const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)(?:\/(.*))?$/);
-    if (!m) return null;
+    if (!m) {
+      return null;
+    }
     const subreddit = m[1];
     const titleSlug = m[3] && m[3].length > 0 ? m[3] : null;
     const pathNorm = path.replace(/\/+$/, "");
@@ -228,10 +252,13 @@ export function getSteamWidgetRef(
   try {
     const u = new URL(url);
     const h = host(u);
-    if (h !== "store.steampowered.com" && h !== "steamcommunity.com")
+    if (h !== "store.steampowered.com" && h !== "steamcommunity.com") {
       return null;
+    }
     const appMatch = u.pathname.match(/\/app\/(\d+)/);
-    if (!appMatch) return null;
+    if (!appMatch) {
+      return null;
+    }
     const appId = appMatch[1];
     return {
       widgetUrl: `https://store.steampowered.com/widget/${appId}/`,

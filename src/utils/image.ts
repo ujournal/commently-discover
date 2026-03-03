@@ -4,24 +4,28 @@ import { IMAGE_FETCH_TIMEOUT_MS } from "./constants";
 export async function fetchAsBase64(
   imageUrl: string,
   maxBytes: number,
+  timeoutMs: number = IMAGE_FETCH_TIMEOUT_MS,
 ): Promise<{ dataUrl: string; contentType: string } | null> {
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(
-      () => controller.abort(),
-      IMAGE_FETCH_TIMEOUT_MS,
-    );
+    const timeout = setTimeout(() => controller.abort(), timeoutMs);
     const res = await fetch(imageUrl, {
       signal: controller.signal,
       headers: { "User-Agent": "Commently-Bot/1.0" },
     });
     clearTimeout(timeout);
-    if (!res.ok) return null;
+    if (!res.ok) {
+      return null;
+    }
     const contentType =
       res.headers.get("content-type")?.split(";")[0]?.trim() || "image/png";
-    if (!contentType.startsWith("image/")) return null;
+    if (!contentType.startsWith("image/")) {
+      return null;
+    }
     const buf = await res.arrayBuffer();
-    if (buf.byteLength > maxBytes) return null;
+    if (buf.byteLength > maxBytes) {
+      return null;
+    }
     const bytes = new Uint8Array(buf);
     let binary = "";
     const chunk = 8192;

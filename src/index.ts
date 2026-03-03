@@ -1,4 +1,5 @@
 import { buildCardHtml } from "./utils/card";
+import { getCacheTagFromUrl, withCacheTag } from "./utils/cache-tag";
 import { getUrlFromBase64PathSegment } from "./utils/url";
 import { runProcessors } from "./processors";
 
@@ -55,10 +56,16 @@ export default {
       acceptLanguage: request.headers.get("Accept-Language"),
     });
 
+    const tag = getCacheTagFromUrl(target);
+    const out =
+      (response.ok || response.status === 302) && tag
+        ? withCacheTag(response, tag)
+        : response;
+
     if (response.ok || response.status === 302) {
-      ctx.waitUntil(cache.put(request, response.clone()));
+      ctx.waitUntil(cache.put(request, out.clone()));
     }
 
-    return response;
+    return out;
   },
 };
