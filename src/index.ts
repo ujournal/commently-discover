@@ -7,7 +7,16 @@ export type { Processor, ProcessorContext, ProcessorResult } from "./processors"
 export { runProcessors, defaultProcessors } from "./processors";
 
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(
+    request: Request,
+    _env: unknown,
+    ctx: ExecutionContext,
+  ): Promise<Response> {
+    const cache = caches.default;
+
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) return cachedResponse;
+
     const requestUrl = new URL(request.url);
     const { searchParams } = requestUrl;
     let target = searchParams.get("url");
@@ -42,8 +51,14 @@ export default {
       });
     }
 
-    return runProcessors(target, {
+    const response = await runProcessors(target, {
       acceptLanguage: request.headers.get("Accept-Language"),
     });
+
+    if (response.ok || response.status === 302) {
+      ctx.waitUntil(cache.put(request, response.clone()));
+    }
+
+    return response;
   },
 };
