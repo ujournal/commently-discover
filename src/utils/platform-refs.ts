@@ -3,7 +3,7 @@ import { MAX_FAVICON_BYTES, MAX_IMAGE_BYTES } from "./constants";
 import { fetchAsBase64 } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
-import { getSiteName, host, fileTypeTitleFromPath } from "./url";
+import { getSiteName, host } from "./url";
 
 /** Ref data for the basic (non-platform) link card: title, description, images, url, siteName. */
 export type BasicRef = {
@@ -24,22 +24,19 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
       result = { ok: true, value: fallback };
     }
   }
-  const data = result.ok ? result.value : shimSiteData(target);
-  const siteName = getSiteName(target);
-  let title = data.title;
-  try {
-    const u = new URL(target);
-    const fileTitle = fileTypeTitleFromPath(u.pathname);
-    if (fileTitle) title = fileTitle;
-  } catch {
-    // ignore URL parse errors; fall back to existing title
+  let data = result.ok ? result.value : shimSiteData(target);
+  // If unfurl returned but we still have no meaningful metadata (typical for direct PDFs, images, etc.),
+  // fall back to shim so we can derive a sensible title from the filename (e.g. "PDF file").
+  if (!data.title && !data.description && !data.image && !data.favicon) {
+    data = shimSiteData(target);
   }
+  const siteName = getSiteName(target);
   const [imageDataUrl, faviconDataUrl] = await Promise.all([
     data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
     data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
   ]);
   return {
-    title,
+    title: data.title,
     description: data.description,
     imageDataUrl: imageDataUrl?.dataUrl ?? null,
     faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
