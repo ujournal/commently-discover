@@ -1,14 +1,23 @@
 /** Fallback when library returns failed-fetch. */
-export async function unfurlFallback(url: string): Promise<{
+export async function unfurlFallback(
+  url: string,
+  options?: { acceptLanguage?: string | null },
+): Promise<{
   title?: string;
   description?: string;
   image?: string;
   favicon?: string;
 } | null> {
   try {
+    const headers: Record<string, string> = {
+      "User-Agent": "Commently-Bot/1.0 (+https://commently.top)",
+    };
+    if (options?.acceptLanguage?.trim()) {
+      headers["Accept-Language"] = options.acceptLanguage.trim();
+    }
     const res = await fetch(url, {
       redirect: "follow",
-      headers: { "User-Agent": "Commently-Bot/1.0 (+https://commently.top)" },
+      headers,
     });
     if (!res.ok) return null;
     const html = await res.text();

@@ -22,24 +22,29 @@ export type BasicRef = {
 };
 
 /** Unfurl URL (with fallback/shim), fetch images as base64; returns ref for buildBasicEmbedHtml. */
-export async function getBasicRef(target: string): Promise<BasicRef> {
-  let result = await unfurl(target);
+export async function getBasicRef(
+  url: string,
+  options?: { acceptLanguage?: string | null },
+): Promise<BasicRef> {
+  let result = await unfurl(url);
   if (!result.ok && result.error === "failed-fetch") {
-    const fallback = await unfurlFallback(target);
+    const fallback = await unfurlFallback(url, {
+      acceptLanguage: options?.acceptLanguage,
+    });
     if (fallback) {
       result = { ok: true, value: fallback };
     }
   }
-  let data = result.ok ? result.value : shimSiteData(target);
+  let data = result.ok ? result.value : shimSiteData(url);
   // If unfurl returned but we still have no meaningful metadata (typical for direct PDFs, images, etc.),
   // fall back to shim so we can derive a sensible title from the filename (e.g. "PDF file").
   if (!data.title && !data.description && !data.image && !data.favicon) {
-    data = shimSiteData(target);
+    data = shimSiteData(url);
   }
   // When we have no title but URL points to a file (e.g. #/media/File.jpg), use decoded filename
   if (!data.title) {
     try {
-      const u = new URL(target);
+      const u = new URL(url);
       const pathForFile = getPathForFileDetection(u);
       if (fileTypeTitleFromPath(pathForFile)) {
         const decodedName = getDecodedFilenameFromUrl(u);
@@ -51,7 +56,7 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
       /* ignore */
     }
   }
-  const siteName = getSiteName(target);
+  const siteName = getSiteName(url);
   const [imageDataUrl, faviconDataUrl] = await Promise.all([
     data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
     data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
@@ -61,7 +66,7 @@ export async function getBasicRef(target: string): Promise<BasicRef> {
     description: data.description,
     imageDataUrl: imageDataUrl?.dataUrl ?? null,
     faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
-    url: target,
+    url,
     siteName,
   };
 }

@@ -146,7 +146,9 @@ const embedRedirectProcessor: Processor = {
 const basicProcessor: Processor = {
   name: "basic",
   async handle(url: string, context: ProcessorContext): Promise<ProcessorResult> {
-    const ref = await getBasicRef(url);
+    const ref = await getBasicRef(url, {
+      acceptLanguage: context.acceptLanguage,
+    });
     const html = buildBasicEmbedHtml(ref);
     return { handled: true, response: htmlResponse(html, context) };
   },
