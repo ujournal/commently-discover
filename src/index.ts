@@ -1,22 +1,49 @@
-import { buildCardHtml } from "./utils/card";
-import { getCacheTagFromUrl, withCacheTag } from "./utils/cache-tag";
-import { getUrlFromBase64PathSegment } from "./utils/url";
 import { runProcessors } from "./processors";
+import { getCacheTagFromUrl, withCacheTag } from "./utils/cache-tag";
+import { getFaviconResponse } from "./utils/favicon";
+import { getInvalidUrlResponse } from "./utils/invalid-url";
+import { getRobotsTxtResponse } from "./utils/robots";
+import { getUrlFromBase64PathSegment } from "./utils/url";
 
+export { defaultProcessors, runProcessors } from "./processors";
+export type {
+  Processor,
+  ProcessorContext,
+  ProcessorResult,
+} from "./processors";
 export type { EmbedPageOptions } from "./utils/embed-page";
-export type { Processor, ProcessorContext, ProcessorResult } from "./processors";
-export { runProcessors, defaultProcessors } from "./processors";
+
+interface Env {
+  ASSETS: Fetcher;
+}
 
 export default {
   async fetch(
     request: Request,
-    _env: unknown,
+    env: Env,
     ctx: ExecutionContext,
   ): Promise<Response> {
     const cache = caches.default;
 
     const cachedResponse = await cache.match(request);
-    if (cachedResponse) return cachedResponse;
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+
+    const faviconResponse = await getFaviconResponse(
+      request,
+      env.ASSETS,
+      cache,
+      ctx,
+    );
+    if (faviconResponse) {
+      return faviconResponse;
+    }
+
+    const robotsResponse = await getRobotsTxtResponse(request, cache, ctx);
+    if (robotsResponse) {
+      return robotsResponse;
+    }
 
     const requestUrl = new URL(request.url);
     const { searchParams } = requestUrl;
@@ -34,22 +61,9 @@ export default {
     }
 
     if (!target || !target.match(/^https?:\/\//)) {
-      const html = buildCardHtml({
-        title: "Invalid URL",
-        description: "Provide a full URL via ?url=https://example.com",
-        imageDataUrl: null,
-        faviconDataUrl: null,
-        url: "Missing or invalid ?url parameter",
-        href: "about:blank",
-        siteName: "Commently",
-      });
-      return new Response(html, {
-        status: 400,
-        headers: {
-          "content-type": "text/html; charset=utf-8",
-          "Cache-Control": "no-store",
-        },
-      });
+      const response = getInvalidUrlResponse();
+      ctx.waitUntil(cache.put(request, response.clone()));
+      return response;
     }
 
     const response = await runProcessors(target, {
