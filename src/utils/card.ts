@@ -2,42 +2,42 @@ import { escapeHtml, prepareText } from "./html";
 
 /** Deterministic gradient CSS from URL (for cards with no image). */
 function urlToGradientCss(url: string): string {
-  let h = 0;
-  for (let i = 0; i < url.length; i++)
-    h = ((h << 5) - h + url.charCodeAt(i)) | 0;
-  // Cool base hue (teal–blue–violet), then complementary (soft warm)
-  const coolHue = 200 + (((h % 70) + 70) % 70); // 200–270°
-  const compHue = (coolHue + 180) % 360;
-  return `linear-gradient(135deg, hsl(${coolHue}, 38%, 78%), hsl(${compHue}, 32%, 90%))`;
+	let h = 0;
+	for (let i = 0; i < url.length; i++)
+		h = ((h << 5) - h + url.charCodeAt(i)) | 0;
+	// Cool base hue (teal–blue–violet), then complementary (soft warm)
+	const coolHue = 200 + (((h % 70) + 70) % 70); // 200–270°
+	const compHue = (coolHue + 180) % 360;
+	return `linear-gradient(135deg, hsl(${coolHue}, 38%, 78%), hsl(${compHue}, 32%, 90%))`;
 }
 
 /** Build responsive HTML card with base64 images and cache headers. */
 export function buildCardHtml(opts: {
-  title: string | undefined;
-  description: string | undefined;
-  imageDataUrl: string | null;
-  faviconDataUrl: string | null;
-  url: string;
-  href?: string;
-  siteName: string;
+	title: string | undefined;
+	description: string | undefined;
+	imageDataUrl: string | null;
+	faviconDataUrl: string | null;
+	url: string;
+	href?: string;
+	siteName: string;
 }): string {
-  const {
-    title,
-    description,
-    imageDataUrl,
-    faviconDataUrl,
-    url,
-    href,
-    siteName,
-  } = opts;
-  const displayTitle = title ? prepareText(title) : "Link";
-  const displayDesc = description ? prepareText(description) : "";
-  const displayUrl = prepareText(url);
-  const displaySite = prepareText(siteName);
+	const {
+		title,
+		description,
+		imageDataUrl,
+		faviconDataUrl,
+		url,
+		href,
+		siteName,
+	} = opts;
+	const displayTitle = title ? prepareText(title) : "Link";
+	const displayDesc = description ? prepareText(description) : "";
+	const displayUrl = prepareText(url);
+	const displaySite = prepareText(siteName);
 
-  const gradientCss = imageDataUrl ? null : urlToGradientCss(url);
+	const gradientCss = imageDataUrl ? null : urlToGradientCss(url);
 
-  return `<!DOCTYPE html>
+	return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -183,9 +183,9 @@ export function buildCardHtml(opts: {
   <article class="card">
     <a class="card-link" href="${escapeHtml(href ?? url)}" target="_blank" rel="noopener noreferrer">
 ${
-  gradientCss
-    ? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
-    : `      <img class="card-image" src="${imageDataUrl}" alt="">`
+	gradientCss
+		? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
+		: `      <img class="card-image" src="${imageDataUrl}" alt="">`
 }
       <div class="card-body">
         <div class="card-site">
