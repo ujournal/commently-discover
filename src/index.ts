@@ -66,8 +66,11 @@ export default {
 			return response;
 		}
 
+		// ?lang=uk shims Accept-Language when header is missing or to override
+		const acceptLanguage =
+			searchParams.get("lang") ?? request.headers.get("Accept-Language");
 		const response = await runProcessors(target, {
-			acceptLanguage: request.headers.get("Accept-Language"),
+			acceptLanguage,
 		});
 
 		const tag = getCacheTagFromUrl(target);
