@@ -24,6 +24,8 @@ export function buildCardHtml(opts: {
   const displayDesc = description ? prepareText(description) : "";
   const displayUrl = prepareText(url);
   const displaySite = prepareText(siteName);
+  const showSiteName =
+    !!faviconDataUrl || displayTitle !== displaySite;
 
   const gradientSeed = imageDataUrl
     ? null
@@ -213,11 +215,11 @@ ${
     : `      <img class="card-image" src="${imageDataUrl}" alt="">`
 }
       <div class="card-body">
-        <div class="card-site">
+${showSiteName ? `        <div class="card-site">
 ${faviconDataUrl ? `          <img src="${faviconDataUrl}" alt="">` : ""}
           <span>${displaySite}</span>
         </div>
-        <h2 class="card-title">${displayTitle}</h2>
+` : ""}        <h2 class="card-title">${displayTitle}</h2>
       </div>
     </a>
   </article>
