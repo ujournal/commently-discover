@@ -82,3 +82,28 @@ export function urlToGradientCss(url: string): string {
 
 	return layers;
 }
+
+/**
+ * Dark color suitable for card background with white text (low lightness, decent saturation).
+ */
+function darkCardColor(hue: number, seed: number, lightnessRange: [number, number]): string {
+	const s = 50 + (seed % 35); // 50–85%
+	const l = lightnessRange[0] + (seed % (lightnessRange[1] - lightnessRange[0] + 1));
+	return hsl(hue, s, l);
+}
+
+/**
+ * Linear gradient (top to bottom) for no-image cards: one dominant color + secondary,
+ * both dark enough for good contrast with white text.
+ */
+export function urlToCardBackgroundGradientCss(url: string): string {
+	const seed = hashString(url);
+	const [h1, h2] = triadicHues(seed);
+	const s1 = (seed >> 8) & 0xff;
+	const s2 = (seed >> 16) & 0xff;
+	// Dominant color: darker (covers most of the card)
+	const dominant = darkCardColor(h1, s1, [28, 38]);
+	// Secondary: slightly different hue, similar darkness for smooth gradient
+	const secondary = darkCardColor(h2, s2, [22, 32]);
+	return `linear-gradient(to bottom, ${dominant} 0%, ${dominant} 55%, ${secondary} 100%)`;
+}

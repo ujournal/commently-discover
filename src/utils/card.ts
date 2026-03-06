@@ -1,5 +1,5 @@
 import { escapeHtml, prepareText } from "./html";
-import { urlToGradientCss } from "./gradient";
+import { urlToCardBackgroundGradientCss } from "./gradient";
 
 /** Build responsive HTML card with base64 images and cache headers. */
 export function buildCardHtml(opts: {
@@ -25,7 +25,7 @@ export function buildCardHtml(opts: {
 	const displayUrl = prepareText(url);
 	const displaySite = prepareText(siteName);
 
-	const gradientCss = imageDataUrl ? null : urlToGradientCss(url);
+	const gradientCss = imageDataUrl ? null : urlToCardBackgroundGradientCss(url);
 
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -141,6 +141,25 @@ export function buildCardHtml(opts: {
       pointer-events: none;
       z-index: 0.5;
     }
+    /* No-image card: gradient background only, no overlay, centered title */
+    .card--no-image .card-link::after { display: none; }
+    .card--no-image .card-body {
+      position: absolute;
+      inset: 0;
+      bottom: auto;
+      max-height: none;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      background: none;
+      padding: clamp(16px, 4vw, 28px);
+    }
+    .card--no-image .card-title {
+      font-size: clamp(1rem, 4.5vw, 1.5rem);
+      -webkit-line-clamp: 3;
+      text-align: center;
+    }
+    .card--no-image .card-site { justify-content: center; }
     .card-body {
       text-shadow: 0 1px 1px rgba(0, 0, 0, 0.5), 0 0 2px rgba(0, 0, 0, 0.25);
     }
@@ -170,7 +189,7 @@ export function buildCardHtml(opts: {
   </style>
 </head>
 <body>
-  <article class="card">
+  <article class="card${gradientCss ? " card--no-image" : ""}">
     <a class="card-link" href="${escapeHtml(href ?? url)}" target="_blank" rel="noopener noreferrer">
 ${
 	gradientCss
