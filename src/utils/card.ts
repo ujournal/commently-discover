@@ -1,15 +1,5 @@
 import { escapeHtml, prepareText } from "./html";
-
-/** Deterministic gradient CSS from URL (for cards with no image). */
-function urlToGradientCss(url: string): string {
-	let h = 0;
-	for (let i = 0; i < url.length; i++)
-		h = ((h << 5) - h + url.charCodeAt(i)) | 0;
-	// Cool base hue (teal–blue–violet), then complementary (soft warm)
-	const coolHue = 200 + (((h % 70) + 70) % 70); // 200–270°
-	const compHue = (coolHue + 180) % 360;
-	return `linear-gradient(135deg, hsl(${coolHue}, 38%, 78%), hsl(${compHue}, 32%, 90%))`;
-}
+import { urlToGradientCss } from "./gradient";
 
 /** Build responsive HTML card with base64 images and cache headers. */
 export function buildCardHtml(opts: {
