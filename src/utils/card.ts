@@ -1,41 +1,44 @@
-import { escapeHtml, prepareText } from "./html";
 import { urlToCardBackgroundGradientCss } from "./gradient";
+import { escapeHtml, prepareText } from "./html";
 
 /** Build responsive HTML card with base64 images and cache headers. */
 export function buildCardHtml(opts: {
-	title: string | undefined;
-	description: string | undefined;
-	imageDataUrl: string | null;
-	faviconDataUrl: string | null;
-	url: string;
-	href?: string;
-	siteName: string;
+  title: string | undefined;
+  description: string | undefined;
+  imageDataUrl: string | null;
+  faviconDataUrl: string | null;
+  url: string;
+  href?: string;
+  siteName: string;
 }): string {
-	const {
-		title,
-		description,
-		imageDataUrl,
-		faviconDataUrl,
-		url,
-		href,
-		siteName,
-	} = opts;
-	const displayTitle = title ? prepareText(title) : "Link";
-	const displayDesc = description ? prepareText(description) : "";
-	const displayUrl = prepareText(url);
-	const displaySite = prepareText(siteName);
+  const {
+    title,
+    description,
+    imageDataUrl,
+    faviconDataUrl,
+    url,
+    href,
+    siteName,
+  } = opts;
+  const displayTitle = title ? prepareText(title) : "Link";
+  const displayDesc = description ? prepareText(description) : "";
+  const displayUrl = prepareText(url);
+  const displaySite = prepareText(siteName);
 
-	const gradientSeed =
-		imageDataUrl ? null : (() => {
-			try {
-				return new URL(url).hostname;
-			} catch {
-				return url;
-			}
-		})();
-	const gradientCss = gradientSeed ? urlToCardBackgroundGradientCss(gradientSeed) : null;
+  const gradientSeed = imageDataUrl
+    ? null
+    : (() => {
+        try {
+          return new URL(url).hostname;
+        } catch {
+          return url;
+        }
+      })();
+  const gradientCss = gradientSeed
+    ? urlToCardBackgroundGradientCss(gradientSeed)
+    : null;
 
-	return `<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -154,7 +157,7 @@ export function buildCardHtml(opts: {
     .card--no-image .card-body {
       position: absolute;
       inset: 0;
-      bottom: auto;
+      bottom: 0;
       max-height: none;
       justify-content: center;
       align-items: center;
@@ -205,9 +208,9 @@ export function buildCardHtml(opts: {
   <article class="card${gradientCss ? " card--no-image" : ""}">
     <a class="card-link" href="${escapeHtml(href ?? url)}" target="_blank" rel="noopener noreferrer">
 ${
-	gradientCss
-		? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
-		: `      <img class="card-image" src="${imageDataUrl}" alt="">`
+  gradientCss
+    ? `      <div class="card-image card-image--gradient" style="background: ${escapeHtml(gradientCss)}"></div>`
+    : `      <img class="card-image" src="${imageDataUrl}" alt="">`
 }
       <div class="card-body">
         <div class="card-site">
