@@ -93,17 +93,17 @@ function darkCardColor(hue: number, seed: number, lightnessRange: [number, numbe
 }
 
 /**
- * Linear gradient (top to bottom) for no-image cards: one dominant color + secondary,
- * both dark enough for good contrast with white text.
+ * Linear gradient (top to bottom) for no-image cards: one base color + a tone of it
+ * (same hue, different lightness). Both dark enough for white text.
+ * Keyed by hostname (or any seed string) for stable colors per domain.
  */
-export function urlToCardBackgroundGradientCss(url: string): string {
-	const seed = hashString(url);
-	const [h1, h2] = triadicHues(seed);
+export function urlToCardBackgroundGradientCss(hostnameOrSeed: string): string {
+	const seed = hashString(hostnameOrSeed);
+	const [h1] = triadicHues(seed);
 	const s1 = (seed >> 8) & 0xff;
-	const s2 = (seed >> 16) & 0xff;
-	// Dominant color: darker (covers most of the card)
-	const dominant = darkCardColor(h1, s1, [28, 38]);
-	// Secondary: slightly different hue, similar darkness for smooth gradient
-	const secondary = darkCardColor(h2, s2, [22, 32]);
-	return `linear-gradient(to bottom, ${dominant} 0%, ${dominant} 55%, ${secondary} 100%)`;
+	// Dominant color
+	const dominant = darkCardColor(h1, s1, [30, 40]);
+	// Second color: same hue, darker tone (same H, same S range, lower L)
+	const tone = darkCardColor(h1, (seed >> 16) & 0xff, [18, 26]);
+	return `linear-gradient(to bottom, ${dominant} 0%, ${dominant} 50%, ${tone} 100%)`;
 }

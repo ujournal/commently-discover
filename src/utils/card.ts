@@ -25,7 +25,15 @@ export function buildCardHtml(opts: {
 	const displayUrl = prepareText(url);
 	const displaySite = prepareText(siteName);
 
-	const gradientCss = imageDataUrl ? null : urlToCardBackgroundGradientCss(url);
+	const gradientSeed =
+		imageDataUrl ? null : (() => {
+			try {
+				return new URL(url).hostname;
+			} catch {
+				return url;
+			}
+		})();
+	const gradientCss = gradientSeed ? urlToCardBackgroundGradientCss(gradientSeed) : null;
 
 	return `<!DOCTYPE html>
 <html lang="en">
@@ -141,7 +149,7 @@ export function buildCardHtml(opts: {
       pointer-events: none;
       z-index: 0.5;
     }
-    /* No-image card: gradient background only, no overlay, centered title */
+    /* No-image card: gradient background only, no overlay, centered text */
     .card--no-image .card-link::after { display: none; }
     .card--no-image .card-body {
       position: absolute;
@@ -154,10 +162,15 @@ export function buildCardHtml(opts: {
       background: none;
       padding: clamp(16px, 4vw, 28px);
     }
+    .card--no-image .card-body .card-site,
+    .card--no-image .card-body .card-title {
+      width: 100%;
+      text-align: center;
+    }
+    .card--no-image .card-body .card-site { justify-content: center; }
     .card--no-image .card-title {
       font-size: clamp(1rem, 4.5vw, 1.5rem);
       -webkit-line-clamp: 3;
-      text-align: center;
     }
     .card--no-image .card-site { justify-content: center; }
     .card-body {
