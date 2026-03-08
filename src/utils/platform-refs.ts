@@ -1,5 +1,5 @@
 import { unfurl } from "cloudflare-workers-unfurl";
-import { MAX_FAVICON_BYTES } from "./constants";
+import { MAX_FAVICON_BYTES, MAX_IMAGE_BYTES } from "./constants";
 import { fetchAsBase64 } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
@@ -57,15 +57,15 @@ export async function getBasicRef(
 		}
 	}
 	const siteName = getSiteName(url);
-	// Basic cards always use hostname-based pattern (waves/layers), not og:image as full-card background
-	const [faviconDataUrl] = await Promise.all([
+	const [faviconResult, imageResult] = await Promise.all([
 		data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
+		data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
 	]);
 	return {
 		title: data.title,
 		description: data.description,
-		imageDataUrl: null,
-		faviconDataUrl: faviconDataUrl?.dataUrl ?? null,
+		imageDataUrl: imageResult?.dataUrl ?? null,
+		faviconDataUrl: faviconResult?.dataUrl ?? null,
 		url,
 		siteName,
 	};
