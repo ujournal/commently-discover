@@ -107,3 +107,28 @@ export function urlToCardBackgroundGradientCss(hostnameOrSeed: string): string {
 	const tone = darkCardColor(h1, (seed >> 16) & 0xff, [18, 26]);
 	return `linear-gradient(to bottom, ${dominant} 0%, ${dominant} 50%, ${tone} 100%)`;
 }
+
+/**
+ * Palette for wave card: base background + 3 tones of one hue (light → mid → rich).
+ * Keyed by hostname/URL so each link gets a stable, harmonious set.
+ * Tones share the same hue and complement when layered with different opacities.
+ */
+export function urlToWavePalette(hostnameOrSeed: string): {
+	base: string;
+	wave1: string;
+	wave2: string;
+	wave3: string;
+} {
+	const seed = hashString(hostnameOrSeed);
+	const [h1] = triadicHues(seed);
+	const s1 = (seed >> 8) & 0xff;
+	const s2 = (seed >> 16) & 0xff;
+	// Base: very light, low saturation (card background)
+	const base = hsl(h1, 12 + (seed % 10), 94 + (seed % 4));
+	// Three tones of the same hue: lightest, mid, richest (same H, stepped S/L)
+	const sat = 40 + (s1 % 35); // 40–75%
+	const wave1 = hsl(h1, sat, 82 + (s1 % 10));       // lightest tone
+	const wave2 = hsl(h1, sat + (s2 % 15), 68 + (s2 % 12)); // mid tone
+	const wave3 = hsl(h1, Math.min(85, sat + 15 + (seed % 10)), 58 + (seed % 14)); // richest tone
+	return { base, wave1, wave2, wave3 };
+}
