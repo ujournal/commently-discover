@@ -43,10 +43,9 @@ function buildMediaEmbedHtml(
 			bodyContent: `  <audio controls preload="metadata"><source src="${safeUrl}"${typeAttr}></audio>`,
 			fallbackLabel,
 			fallbackHref: mediaUrl,
-			bodyStyle:
-				"margin:0; background: transparent; display:flex; justify-content:center; align-items:center;",
-			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; display: flex; justify-content: center; align-items: center; }
-    .embed-wrap audio { width: min(520px, calc(100% - 2rem)); }`,
+			bodyStyle: "margin:0; background: transparent;",
+			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; }
+    .embed-wrap audio { width: 100%; max-width: 100%; display: block; }`,
 		});
 	}
 
