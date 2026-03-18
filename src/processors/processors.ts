@@ -10,6 +10,7 @@ import {
 	buildTikTokEmbedHtml,
 	buildTwitterEmbedHtml,
 } from "../utils/platform-embeds";
+import { buildMediaEmbedHtmlForUrl } from "../utils/media-embed";
 import { getEmbedUrl } from "../utils/embed-url";
 import {
 	getBasicRef,
@@ -132,6 +133,16 @@ const tiktokProcessor: Processor = {
 	},
 };
 
+/** Direct media file embed (mp4/mp3/images). */
+const mediaProcessor: Processor = {
+	name: "media",
+	handle(url: string, context: ProcessorContext): ProcessorResult {
+		const html = buildMediaEmbedHtmlForUrl(url, context.acceptLanguage);
+		if (!html) return { handled: false };
+		return { handled: true, response: htmlResponse(html, context) };
+	},
+};
+
 /** Redirect to embed URL (YouTube, Vimeo, Twitch, Spotify, etc.). */
 const embedRedirectProcessor: Processor = {
 	name: "embed-redirect",
@@ -171,6 +182,7 @@ export const defaultProcessors: Processor[] = [
 	threadsProcessor,
 	redditProcessor,
 	tiktokProcessor,
+	mediaProcessor,
 	embedRedirectProcessor,
 	basicProcessor,
 ];
