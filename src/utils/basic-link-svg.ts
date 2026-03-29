@@ -3,10 +3,7 @@ import type { BasicRef } from "./platform-refs";
 
 /** Escape a double-quoted XML attribute value (href, xlink:href). */
 function escapeXmlAttr(s: string): string {
-	return s
-		.replace(/&/g, "&amp;")
-		.replace(/"/g, "&quot;")
-		.replace(/</g, "&lt;");
+  return s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
 }
 
 const CARD_W = 400;
@@ -17,7 +14,7 @@ const TEXT_W = 316;
 
 /** Silver tile + simple link-chain icon (stroke) when og:image is missing. */
 function linkPlaceholderSvg(): string {
-	return `<g>
+  return `<g>
   <rect width="${THUMB}" height="${THUMB}" fill="#d1d5db"/>
   <g transform="translate(24,24)" fill="none" stroke="#64748b" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round">
     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
@@ -31,12 +28,12 @@ function linkPlaceholderSvg(): string {
  * Clickable via wrapped &lt;a&gt;. Uses foreignObject for text (matches common embed patterns).
  */
 export function buildBasicLinkCardSvg(ref: BasicRef): string {
-	const { title, imageDataUrl, url, siteName } = ref;
-	const displayTitle = title ? prepareText(title) : "Link";
-	const siteLower = prepareText(siteName.toLowerCase());
-	const safeHref = escapeXmlAttr(url);
-	const thumbBlock = imageDataUrl
-		? `  <image
+  const { title, imageDataUrl, url, siteName } = ref;
+  const displayTitle = title ? prepareText(title) : "Link";
+  const siteLower = prepareText(siteName.toLowerCase());
+  const safeHref = escapeXmlAttr(url);
+  const thumbBlock = imageDataUrl
+    ? `  <image
     width="${THUMB}"
     height="${THUMB}"
     x="0"
@@ -45,9 +42,9 @@ export function buildBasicLinkCardSvg(ref: BasicRef): string {
     href="${escapeXmlAttr(imageDataUrl)}"
     xlink:href="${escapeXmlAttr(imageDataUrl)}"
   />`
-		: `  ${linkPlaceholderSvg()}`;
+    : `  ${linkPlaceholderSvg()}`;
 
-	return `<svg width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="border-radius: 8px; outline: 1px solid rgba(0, 0, 0, 0.15); outline-offset: -1px;">
+  return `<svg width="${CARD_W}" height="${CARD_H}" viewBox="0 0 ${CARD_W} ${CARD_H}" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
   <title>${displayTitle}</title>
   <a href="${safeHref}" target="_blank" rel="noopener noreferrer">
     <rect width="${CARD_W}" height="${CARD_H}" fill="#ffffff"/>
