@@ -10,6 +10,7 @@ import {
 	buildTikTokEmbedHtml,
 	buildTwitterEmbedHtml,
 } from "../utils/platform-embeds";
+import { CACHE_HEADERS } from "../utils/constants";
 import { buildMediaEmbedHtmlForUrl } from "../utils/media-embed";
 import { getEmbedUrl } from "../utils/embed-url";
 import {
@@ -26,6 +27,15 @@ import {
 
 function htmlResponse(html: string, context: ProcessorContext): Response {
 	return new Response(html, { headers: context.htmlHeaders });
+}
+
+function svgResponse(svg: string): Response {
+	return new Response(svg, {
+		headers: {
+			"content-type": "image/svg+xml; charset=utf-8",
+			...CACHE_HEADERS,
+		},
+	});
 }
 
 /** Twitter/X status embed. */
@@ -163,8 +173,8 @@ const basicProcessor: Processor = {
 		const ref = await getBasicRef(url, {
 			acceptLanguage: context.acceptLanguage,
 		});
-		const html = buildBasicEmbedHtml(ref);
-		return { handled: true, response: htmlResponse(html, context) };
+		const svg = buildBasicEmbedHtml(ref);
+		return { handled: true, response: svgResponse(svg) };
 	},
 };
 

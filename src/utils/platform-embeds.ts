@@ -3,7 +3,7 @@ import { buildEmbedPageHtml } from "./embed-page";
 import { escapeHtml } from "./html";
 import { getViewInPlatformLabel } from "./i18n";
 import type { BasicRef } from "./platform-refs";
-import { buildCardHtml } from "./card";
+import { buildBasicLinkCardSvg } from "./basic-link-svg";
 
 /** Build HTML page that embeds a Twitter/X tweet (programmatic API + fallback link so it's never blank). */
 export function buildTwitterEmbedHtml(
@@ -183,7 +183,7 @@ export function buildRedditEmbedHtml(
 	});
 }
 
-/** Build HTML for the basic (non-platform) link card from getBasicRef result. */
+/** Build SVG for the basic (non-platform) link card from getBasicRef result. */
 export function buildBasicEmbedHtml(ref: BasicRef): string {
-	return buildCardHtml(ref);
+	return buildBasicLinkCardSvg(ref);
 }

@@ -1,6 +1,6 @@
 import { unfurl } from "cloudflare-workers-unfurl";
 import { MAX_FAVICON_BYTES, MAX_IMAGE_BYTES } from "./constants";
-import { fetchAsBase64 } from "./image";
+import { fetchAsBase64, resizeImageDataUrlToThumbnail } from "./image";
 import { shimSiteData } from "./shim";
 import { unfurlFallback } from "./unfurl";
 import {
@@ -21,7 +21,7 @@ export type BasicRef = {
 	siteName: string;
 };
 
-/** Unfurl URL (with fallback/shim), fetch images as base64; returns ref for buildBasicEmbedHtml. */
+/** Unfurl URL (with fallback/shim), fetch images as base64, downscale og:image for the SVG card; returns ref for buildBasicEmbedHtml. */
 export async function getBasicRef(
 	url: string,
 	options?: { acceptLanguage?: string | null },
@@ -61,10 +61,17 @@ export async function getBasicRef(
 		data.favicon ? fetchAsBase64(data.favicon, MAX_FAVICON_BYTES) : null,
 		data.image ? fetchAsBase64(data.image, MAX_IMAGE_BYTES) : null,
 	]);
+	let imageDataUrl = imageResult?.dataUrl ?? null;
+	if (imageDataUrl) {
+		const resized = await resizeImageDataUrlToThumbnail(imageDataUrl);
+		if (resized) {
+			imageDataUrl = resized;
+		}
+	}
 	return {
 		title: data.title,
 		description: data.description,
-		imageDataUrl: imageResult?.dataUrl ?? null,
+		imageDataUrl,
 		faviconDataUrl: faviconResult?.dataUrl ?? null,
 		url,
 		siteName,
