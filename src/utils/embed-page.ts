@@ -11,7 +11,7 @@ export type EmbedPageOptions = {
 	fallbackLabel: string;
 	/** Fallback link URL (will be escaped). */
 	fallbackHref: string;
-	/** Optional: accent color for fallback link (default blue #1d9bf0). */
+	/** Optional: accent color for fallback link (default oklch neutral). */
 	fallbackLinkColor?: string;
 	/** Optional: extra CSS for html/body. Default: no background (transparent). */
 	bodyStyle?: string;
@@ -28,7 +28,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
 		bodyContent,
 		fallbackLabel,
 		fallbackHref,
-		fallbackLinkColor = "#1d9bf0",
+		fallbackLinkColor = "oklch(0.276 0.014 64)",
 		bodyStyle = "background: transparent;",
 		wrapperStyle = "",
 		resizeScript = EMBED_RESIZE_SCRIPT,
