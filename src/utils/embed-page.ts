@@ -58,15 +58,9 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     @media (prefers-reduced-motion: reduce) {
       .embed-skeleton { animation: none; opacity: 0.5; }
     }
-    html.embed-page--script-skeleton,
-    body.embed-page--script-skeleton {
-      justify-content: flex-start;
-    }
     .embed-wrap.embed-wrap--script {
       position: relative;
       min-height: 240px;
-      justify-content: flex-start;
-      align-items: stretch;
     }
     .embed-wrap.embed-wrap--script > .embed-skeleton {
       position: absolute;
@@ -95,7 +89,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     }`
 		: "";
 	return `<!DOCTYPE html>
-<html lang="en"${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -109,7 +103,7 @@ ${wrapperStyle ? `    ${wrapperStyle.replace(/\n/g, "\n    ")}` : ""}
 ${skeletonStyles}
   </style>
 </head>
-<body${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
+<body>
   <div class="${wrapClass}">
 ${innerBody}
   </div>
