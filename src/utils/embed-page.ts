@@ -62,6 +62,18 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     body.embed-page--script-skeleton {
       align-items: center;
     }
+    body.embed-page--script-skeleton {
+      width: 100%;
+    }
+    body.embed-page--script-skeleton .embed-wrap.embed-wrap--script {
+      width: fit-content;
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    body.embed-page--script-skeleton .fallback {
+      align-self: stretch;
+    }
     .embed-wrap.embed-wrap--script {
       position: relative;
       min-height: 240px;
