@@ -70,6 +70,43 @@ export const EMBED_RESIZE_SCRIPT_MAX_HEIGHT = `
 })();
 `;
 
+/** Hides the script-embed skeleton once the widget injects an iframe or known root (Twitter/Facebook, etc.). */
+export const EMBED_SKELETON_HIDE_SCRIPT = `
+(function() {
+  var wrap = document.querySelector(".embed-wrap.embed-wrap--script");
+  var skel = document.querySelector(".embed-skeleton");
+  if (!wrap || !skel) return;
+  var hidden = false;
+  var mo;
+  function hide() {
+    if (hidden) return;
+    hidden = true;
+    if (mo) mo.disconnect();
+    skel.classList.add("embed-skeleton--hidden");
+    setTimeout(function() {
+      if (skel.parentNode) skel.parentNode.removeChild(skel);
+    }, 400);
+  }
+  function loaded() {
+    if (wrap.querySelector("iframe")) return true;
+    if (wrap.querySelector(".twitter-tweet")) return true;
+    if (wrap.querySelector(".fb_iframe_widget")) return true;
+    return false;
+  }
+  function check() {
+    if (loaded()) hide();
+  }
+  if (loaded()) {
+    hide();
+    return;
+  }
+  mo = new MutationObserver(check);
+  mo.observe(wrap, { childList: true, subtree: true });
+  window.addEventListener("load", check);
+  setTimeout(hide, 30000);
+})();
+`;
+
 export const EMBED_PAGE_BODY_BASE = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body { min-height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; display: flex; flex-direction: column; justify-content: center; }

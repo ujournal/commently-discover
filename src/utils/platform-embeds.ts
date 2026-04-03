@@ -28,6 +28,7 @@ export function buildTwitterEmbedHtml(
 	return buildEmbedPageHtml({
 		title: "X post",
 		bodyContent: `  <div id="tweet-container" class="tweet-container"></div>\n  <script>${tweetScript}</script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "X"),
 		fallbackHref: tweetHref,
 		wrapperStyle: `.embed-wrap { padding: 1rem; }
@@ -47,6 +48,7 @@ export function buildFacebookEmbedHtml(
 		bodyContent: `  <div id="fb-root"></div>
   <div class="fb-post" data-href="${safeHref}" data-width="500"></div>
   <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v3.2"></script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Facebook"),
 		fallbackHref: postUrl,
 		wrapperStyle: `.embed-wrap .fb-post { margin: 0 auto; background-color: #fff; }
@@ -70,6 +72,7 @@ export function buildInstagramEmbedHtml(
       window.instgrm.Embeds.process();
     }
   </script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Instagram"),
 		fallbackHref: postUrl,
 		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 540px; margin: 0 auto; }
@@ -107,6 +110,7 @@ export function buildTelegramEmbedHtml(
 	return buildEmbedPageHtml({
 		title: "Telegram post",
 		bodyContent: `    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${safeRef}" data-width="100%"></script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Telegram"),
 		fallbackHref: postUrl,
 		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 550px; }
@@ -124,6 +128,7 @@ export function buildThreadsEmbedHtml(
 		title: "Threads post",
 		bodyContent: `  <blockquote class="text-post-media" data-text-post-permalink="${safePostUrl}"></blockquote>
   <script async src="https://www.threads.net/embed.js" charset="utf-8"></script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Threads"),
 		fallbackHref: postUrl,
 		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 658px; }
@@ -145,6 +150,7 @@ export function buildTikTokEmbedHtml(
   <a href="${safeVideoUrl}">TikTok video</a>
 </blockquote>
   <script async src="https://www.tiktok.com/embed.js"></script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "TikTok"),
 		fallbackHref: videoUrl,
 		bodyStyle: "background: #fff;",
@@ -176,6 +182,7 @@ export function buildRedditEmbedHtml(
   <a href="${safePostUrl}">${safeTitleText}</a>
 </blockquote>
   <script async src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>`,
+		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Reddit"),
 		fallbackHref: postUrl,
 		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 640px; }

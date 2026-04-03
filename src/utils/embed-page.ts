@@ -1,4 +1,8 @@
-import { EMBED_PAGE_BODY_BASE, EMBED_RESIZE_SCRIPT } from "./constants";
+import {
+	EMBED_PAGE_BODY_BASE,
+	EMBED_RESIZE_SCRIPT,
+	EMBED_SKELETON_HIDE_SCRIPT,
+} from "./constants";
 import { escapeHtml } from "./html";
 
 /** Options for the universal embed page template (wrapper + fallback for all embed types). */
@@ -19,6 +23,8 @@ export type EmbedPageOptions = {
 	wrapperStyle?: string;
 	/** Optional: custom resize script; if omitted, uses default EMBED_RESIZE_SCRIPT. */
 	resizeScript?: string;
+	/** When true, show a pulsing skeleton until a script-loaded widget appears (iframe / known widget root). */
+	scriptEmbedSkeleton?: boolean;
 };
 
 /** Build a standardized HTML page for any embed: shared wrapper, base styles, and fallback link. */
@@ -32,10 +38,48 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
 		bodyStyle = "background: transparent;",
 		wrapperStyle = "",
 		resizeScript = EMBED_RESIZE_SCRIPT,
+		scriptEmbedSkeleton = false,
 	} = opts;
 	const safeTitle = escapeHtml(title);
 	const safeFallbackHref = escapeHtml(fallbackHref);
 	const safeFallbackLabel = escapeHtml(fallbackLabel);
+	const wrapClass = scriptEmbedSkeleton
+		? "embed-wrap embed-wrap--script"
+		: "embed-wrap";
+	const innerBody = scriptEmbedSkeleton
+		? `  <div class="embed-skeleton" aria-hidden="true"></div>\n${bodyContent}`
+		: bodyContent;
+	const skeletonStyles = scriptEmbedSkeleton
+		? `
+    @keyframes embed-skeleton-pulse {
+      0%, 100% { opacity: 0.38; }
+      50% { opacity: 0.72; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .embed-skeleton { animation: none; opacity: 0.5; }
+    }
+    .embed-wrap.embed-wrap--script {
+      position: relative;
+      min-height: 240px;
+    }
+    .embed-skeleton {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
+      border-radius: 12px;
+      background: rgba(0, 0, 0, 0.09);
+      pointer-events: none;
+      animation: embed-skeleton-pulse 1.35s ease-in-out infinite;
+    }
+    .embed-skeleton.embed-skeleton--hidden {
+      opacity: 0;
+      transition: opacity 0.35s ease;
+    }
+    .embed-wrap.embed-wrap--script > :not(.embed-skeleton) {
+      position: relative;
+      z-index: 1;
+    }`
+		: "";
 	return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -48,14 +92,15 @@ ${EMBED_PAGE_BODY_BASE}
     .fallback a { color: ${fallbackLinkColor}; }
 ${wrapperStyle ? `    ${wrapperStyle.replace(/\n/g, "\n    ")}` : ""}
     .embed-wrap { padding-bottom: 0; }
+${skeletonStyles}
   </style>
 </head>
 <body>
-  <div class="embed-wrap">
-${bodyContent}
+  <div class="${wrapClass}">
+${innerBody}
   </div>
   <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>
-  <script>${resizeScript}</script>
+  <script>${resizeScript}</script>${scriptEmbedSkeleton ? `\n  <script>${EMBED_SKELETON_HIDE_SCRIPT}</script>` : ""}
 </body>
 </html>`;
 }
