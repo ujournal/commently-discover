@@ -83,10 +83,7 @@ export const EMBED_SKELETON_HIDE_SCRIPT = `
     hidden = true;
     if (mo) mo.disconnect();
     wrap.classList.add("embed-wrap--loaded");
-    skel.classList.add("embed-skeleton--hidden");
-    setTimeout(function() {
-      if (skel.parentNode) skel.parentNode.removeChild(skel);
-    }, 400);
+    if (skel.parentNode) skel.parentNode.removeChild(skel);
   }
   function loaded() {
     if (wrap.querySelector("iframe")) return true;

@@ -22,7 +22,7 @@ export function buildTwitterEmbedHtml(
       return t;
     }(document, "script", "twitter-wjs"));
     twttr.ready(function() {
-      var p = twttr.widgets.createTweet("${safeId}", document.getElementById("tweet-container"), { dnt: true });
+      var p = twttr.widgets.createTweet("${safeId}", document.getElementById("tweet-container"), { dnt: true, chrome: "nofooter" });
       if (p && typeof p.then === "function") {
         p.then(function() {
           if (window.__commentlyDiscoverHideEmbedSkeleton) window.__commentlyDiscoverHideEmbedSkeleton();

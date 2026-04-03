@@ -111,10 +111,6 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       width: 100%;
       box-sizing: border-box;
     }
-    .embed-skeleton.embed-skeleton--hidden {
-      opacity: 0;
-      transition: opacity 0.35s ease;
-    }
     .embed-wrap.embed-wrap--script > .embed-body {
       position: relative;
       z-index: 1;
