@@ -34,12 +34,13 @@ export function buildTwitterEmbedHtml(
   `;
 	return buildEmbedPageHtml({
 		title: "X post",
-		bodyContent: `  <div id="tweet-container" class="tweet-container"></div>\n  <script>${tweetScript}</script>`,
+		bodyContent: `  <div id="tweet-container" class="tweet tweet-container"></div>\n  <script>${tweetScript}</script>`,
 		scriptEmbedSkeleton: true,
 		fallbackLabel: getViewInPlatformLabel(acceptLanguage, "X"),
 		fallbackHref: tweetHref,
 		wrapperStyle: `.embed-wrap { padding: 1rem; }
 		.embed-wrap blockquote { margin: 0 auto; }
+    .tweet { margin-inline: auto; }
     .embed-wrap > .tweet-container > .twitter-tweet { margin: 0 auto !important; }`,
 	});
 }
