@@ -107,7 +107,6 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       padding: 0 1rem;
       pointer-events: auto;
       text-align: center;
-      width: 100%;
       box-sizing: border-box;
     }
     .embed-wrap.embed-wrap--script > .embed-body {
