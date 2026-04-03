@@ -82,10 +82,6 @@ export const EMBED_SKELETON_HIDE_SCRIPT = `
     if (hidden) return;
     hidden = true;
     if (mo) mo.disconnect();
-    var fb = skel.querySelector(".fallback");
-    if (fb && wrap.parentNode) {
-      wrap.parentNode.insertBefore(fb, wrap.nextSibling);
-    }
     wrap.classList.add("embed-wrap--loaded");
     skel.classList.add("embed-skeleton--hidden");
     setTimeout(function() {
