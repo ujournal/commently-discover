@@ -129,7 +129,6 @@ ${EMBED_PAGE_BODY_BASE}
     html, body { ${bodyStyle} }
     .fallback a { color: ${fallbackLinkColor}; }
 ${wrapperStyle ? `    ${wrapperStyle.replace(/\n/g, "\n    ")}` : ""}
-    .embed-wrap { padding-bottom: 0; }
 ${skeletonStyles}
   </style>
 </head>
