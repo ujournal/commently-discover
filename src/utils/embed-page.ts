@@ -79,7 +79,6 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       left: var(--embed-skeleton-gap, 1rem);
       right: var(--embed-skeleton-gap, 1rem);
       bottom: var(--embed-skeleton-gap, 1rem);
-      width: 100% !important;
       min-height: 200px;
       max-width: none !important;
       display: flex;
