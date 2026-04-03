@@ -47,7 +47,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
 		? "embed-wrap embed-wrap--script"
 		: "embed-wrap";
 	const innerBody = scriptEmbedSkeleton
-		? `  <div class="embed-skeleton" aria-hidden="true"></div>\n${bodyContent}`
+		? `  <div class="embed-skeleton" aria-hidden="true"></div>\n  <div class="embed-body">\n${bodyContent}\n  </div>`
 		: bodyContent;
 	const skeletonStyles = scriptEmbedSkeleton
 		? `
@@ -75,9 +75,11 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       opacity: 0;
       transition: opacity 0.35s ease;
     }
-    .embed-wrap.embed-wrap--script > :not(.embed-skeleton) {
+    .embed-wrap.embed-wrap--script > .embed-body {
       position: relative;
       z-index: 1;
+      min-width: 0;
+      flex: 1 1 auto;
     }`
 		: "";
 	return `<!DOCTYPE html>

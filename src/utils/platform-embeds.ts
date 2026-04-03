@@ -22,7 +22,14 @@ export function buildTwitterEmbedHtml(
       return t;
     }(document, "script", "twitter-wjs"));
     twttr.ready(function() {
-      twttr.widgets.createTweet("${safeId}", document.getElementById("tweet-container"), { dnt: true });
+      var p = twttr.widgets.createTweet("${safeId}", document.getElementById("tweet-container"), { dnt: true });
+      if (p && typeof p.then === "function") {
+        p.then(function() {
+          if (window.__commentlyDiscoverHideEmbedSkeleton) window.__commentlyDiscoverHideEmbedSkeleton();
+        }).catch(function() {
+          if (window.__commentlyDiscoverHideEmbedSkeleton) window.__commentlyDiscoverHideEmbedSkeleton();
+        });
+      }
     });
   `;
 	return buildEmbedPageHtml({

@@ -96,6 +96,7 @@ export const EMBED_SKELETON_HIDE_SCRIPT = `
   function check() {
     if (loaded()) hide();
   }
+  window.__commentlyDiscoverHideEmbedSkeleton = hide;
   if (loaded()) {
     hide();
     return;
