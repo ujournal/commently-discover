@@ -58,14 +58,26 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     @media (prefers-reduced-motion: reduce) {
       .embed-skeleton { animation: none; opacity: 0.5; }
     }
+    html.embed-page--script-skeleton,
+    body.embed-page--script-skeleton {
+      justify-content: flex-start;
+    }
     .embed-wrap.embed-wrap--script {
       position: relative;
       min-height: 240px;
+      justify-content: flex-start;
+      align-items: stretch;
     }
-    .embed-skeleton {
+    .embed-wrap.embed-wrap--script > .embed-skeleton {
       position: absolute;
-      inset: 0;
       z-index: 0;
+      top: var(--embed-skeleton-gap, 1rem);
+      left: var(--embed-skeleton-gap, 1rem);
+      right: var(--embed-skeleton-gap, 1rem);
+      bottom: auto;
+      width: auto !important;
+      min-height: 200px;
+      max-width: none !important;
       border-radius: 12px;
       background: rgba(0, 0, 0, 0.09);
       pointer-events: none;
@@ -83,7 +95,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     }`
 		: "";
 	return `<!DOCTYPE html>
-<html lang="en">
+<html lang="en"${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -97,7 +109,7 @@ ${wrapperStyle ? `    ${wrapperStyle.replace(/\n/g, "\n    ")}` : ""}
 ${skeletonStyles}
   </style>
 </head>
-<body>
+<body${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
   <div class="${wrapClass}">
 ${innerBody}
   </div>
