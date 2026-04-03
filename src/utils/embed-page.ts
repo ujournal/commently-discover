@@ -76,9 +76,9 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       position: absolute;
       z-index: 0;
       top: var(--embed-skeleton-gap, 1rem);
-      left: 0;
-      right: 0;
-      bottom: auto;
+      left: var(--embed-skeleton-gap, 1rem);
+      right: var(--embed-skeleton-gap, 1rem);
+      bottom: var(--embed-skeleton-gap, 1rem);
       width: 100% !important;
       min-height: 200px;
       max-width: none !important;
