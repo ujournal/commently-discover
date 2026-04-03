@@ -40,8 +40,7 @@ export function buildTwitterEmbedHtml(
     fallbackHref: tweetHref,
     wrapperStyle: `.embed-wrap { padding: 1rem; }
 		.embed-wrap blockquote { margin: 0 auto; }
-    .twitter-tweet { margin-inline: auto; }
-    .embed-wrap > .tweet-container > .twitter-tweet { margin: 0 auto !important; }`,
+    .embed-wrap .twitter-tweet { margin: 0 !important; }`,
   });
 }
 
