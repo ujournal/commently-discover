@@ -92,7 +92,10 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     }
     .embed-wrap.embed-wrap--script > .embed-skeleton > .embed-skeleton__plate {
       position: absolute;
-      inset: 0;
+			top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       z-index: 0;
       border-radius: 12px;
       background: rgba(0, 0, 0, 0.09);
