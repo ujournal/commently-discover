@@ -108,7 +108,7 @@ export const EMBED_SKELETON_HIDE_SCRIPT = `
 
 export const EMBED_PAGE_BODY_BASE = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    html, body { min-height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     .embed-wrap { margin: 0 auto; width: 100%; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
     .embed-wrap > * { width: 100% !important; }
