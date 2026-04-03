@@ -47,8 +47,15 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     ? "embed-wrap embed-wrap--script"
     : "embed-wrap";
   const innerBody = scriptEmbedSkeleton
-    ? `  <div class="embed-skeleton" aria-hidden="true"></div>\n  <div class="embed-body">\n${bodyContent}\n  </div>`
+    ? `  <div class="embed-skeleton" role="presentation">
+    <div class="embed-skeleton__plate" aria-hidden="true"></div>
+    <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>
+  </div>
+  <div class="embed-body">\n${bodyContent}\n  </div>`
     : bodyContent;
+  const fallbackAfterWrap = scriptEmbedSkeleton
+    ? ""
+    : `\n  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>`;
   const skeletonStyles = scriptEmbedSkeleton
     ? `
     @keyframes embed-skeleton-pulse {
@@ -56,11 +63,14 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       50% { opacity: 0.72; }
     }
     @media (prefers-reduced-motion: reduce) {
-      .embed-skeleton { animation: none; opacity: 0.5; }
+      .embed-skeleton__plate { animation: none; opacity: 0.5; }
     }
     .embed-wrap.embed-wrap--script {
       position: relative;
       min-height: 240px;
+    }
+    .embed-wrap.embed-wrap--script:not(.embed-wrap--loaded) > .embed-body {
+      pointer-events: none;
     }
     .embed-wrap.embed-wrap--script > .embed-skeleton {
       position: absolute;
@@ -72,10 +82,34 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       width: 100% !important;
       min-height: 200px;
       max-width: none !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-sizing: border-box;
+      border-radius: 12px;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .embed-wrap.embed-wrap--script > .embed-skeleton > .embed-skeleton__plate {
+      position: absolute;
+      inset: 0;
+      z-index: 0;
       border-radius: 12px;
       background: rgba(0, 0, 0, 0.09);
       pointer-events: none;
       animation: embed-skeleton-pulse 1.35s ease-in-out infinite;
+    }
+    .embed-wrap.embed-wrap--script > .embed-skeleton > .fallback {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      height: auto;
+      min-height: 0;
+      padding: 0 1rem;
+      pointer-events: auto;
+      text-align: center;
+      width: 100%;
+      box-sizing: border-box;
     }
     .embed-skeleton.embed-skeleton--hidden {
       opacity: 0;
@@ -106,8 +140,7 @@ ${skeletonStyles}
 <body${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
   <div class="${wrapClass}">
 ${innerBody}
-  </div>
-  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>
+  </div>${fallbackAfterWrap}
   <script>${resizeScript}</script>${scriptEmbedSkeleton ? `\n  <script>${EMBED_SKELETON_HIDE_SCRIPT}</script>` : ""}
 </body>
 </html>`;
