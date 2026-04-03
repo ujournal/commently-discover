@@ -3,7 +3,7 @@ export const MAX_FAVICON_BYTES = 256 * 1024; // 256KB for favicon
 export const IMAGE_FETCH_TIMEOUT_MS = 5000;
 
 export const CACHE_HEADERS = {
-	"Cache-Control": "public, s-maxage=31536000, immutable",
+  "Cache-Control": "public, s-maxage=31536000, immutable",
 };
 
 /** Script injected into embed pages: sends scroll height to parent via postMessage so outer frame can resize iframe. */
@@ -108,7 +108,7 @@ export const EMBED_SKELETON_HIDE_SCRIPT = `
 
 export const EMBED_PAGE_BODY_BASE = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { min-height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; display: flex; flex-direction: column; justify-content: center; }
+    html, body { min-height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; display: flex; flex-direction: column; justify-content: center; align-items: center; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     .embed-wrap { margin: 0 auto; width: 100%; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
     .embed-wrap > * { width: 100% !important; }
