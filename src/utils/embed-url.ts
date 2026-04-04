@@ -5,6 +5,7 @@ import { host } from "./url";
  * Covers: YouTube, Vimeo, Twitch, TikTok, Dailymotion, Twitter/X, Instagram, Spotify, SoundCloud,
  * Reddit, CodePen, Figma, Loom, Pinterest, LinkedIn, Giphy, Steam.
  * Bluesky is handled separately: HTML page from oEmbed + embed.bsky.app (no direct iframe URL).
+ * Mastodon is handled separately: HTML page with official blockquote + instance embed.js.
  * Telegram is handled separately: we serve an HTML page that loads the official post widget (t.me cannot be iframed).
  */
 export function getEmbedUrl(url: string): string | null {

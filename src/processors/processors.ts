@@ -4,6 +4,7 @@ import {
 	buildBlueskyEmbedHtml,
 	buildFacebookEmbedHtml,
 	buildInstagramEmbedHtml,
+	buildMastodonEmbedHtml,
 	buildRedditEmbedHtml,
 	buildSteamEmbedHtml,
 	buildTelegramEmbedHtml,
@@ -20,6 +21,7 @@ import {
 	getBlueskyPostRef,
 	getFacebookPostRef,
 	getInstagramEmbedRef,
+	getMastodonPostRef,
 	getRedditPostRef,
 	getSteamWidgetRef,
 	getTelegramPostRef,
@@ -111,6 +113,17 @@ const threadsProcessor: Processor = {
 		const postUrl = getThreadsPostRef(url);
 		if (!postUrl) return { handled: false };
 		const html = buildThreadsEmbedHtml(postUrl, context.acceptLanguage);
+		return { handled: true, response: htmlResponse(html, context) };
+	},
+};
+
+/** Mastodon post embed (official blockquote + instance embed.js). */
+const mastodonProcessor: Processor = {
+	name: "mastodon",
+	handle(url: string, context: ProcessorContext): ProcessorResult {
+		const postUrl = getMastodonPostRef(url);
+		if (!postUrl) return { handled: false };
+		const html = buildMastodonEmbedHtml(postUrl, context.acceptLanguage);
 		return { handled: true, response: htmlResponse(html, context) };
 	},
 };
@@ -213,6 +226,7 @@ export const defaultProcessors: Processor[] = [
 	steamProcessor,
 	telegramProcessor,
 	threadsProcessor,
+	mastodonProcessor,
 	blueskyProcessor,
 	redditProcessor,
 	tiktokProcessor,
