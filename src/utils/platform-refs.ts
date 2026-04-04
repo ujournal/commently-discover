@@ -158,6 +158,28 @@ export function getInstagramEmbedRef(url: string): string | null {
 	}
 }
 
+/** Bluesky post URL (bsky.app) for oEmbed + embed.js, or null. */
+export function getBlueskyPostRef(url: string): string | null {
+	try {
+		const u = new URL(url);
+		const h = host(u);
+		if (h !== "bsky.app" && h !== "www.bsky.app") {
+			return null;
+		}
+		const m = u.pathname.match(
+			/^\/profile\/([^/]+)\/post\/([^/?#]+)\/?$/,
+		);
+		if (!m) {
+			return null;
+		}
+		const actor = m[1];
+		const rkey = m[2];
+		return `https://bsky.app/profile/${actor}/post/${rkey}`;
+	} catch {
+		return null;
+	}
+}
+
 /** Threads post URL for the official embed (blockquote + embed.js). Returns the post URL or null. */
 export function getThreadsPostRef(url: string): string | null {
 	try {

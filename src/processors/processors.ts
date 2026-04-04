@@ -1,6 +1,7 @@
 import type { Processor, ProcessorContext, ProcessorResult } from "./types";
 import {
 	buildBasicEmbedHtml,
+	buildBlueskyEmbedHtml,
 	buildFacebookEmbedHtml,
 	buildInstagramEmbedHtml,
 	buildRedditEmbedHtml,
@@ -9,12 +10,14 @@ import {
 	buildThreadsEmbedHtml,
 	buildTikTokEmbedHtml,
 	buildTwitterEmbedHtml,
+	fetchBlueskyOembedFragment,
 } from "../utils/platform-embeds";
 import { CACHE_HEADERS } from "../utils/constants";
 import { buildMediaEmbedHtmlForUrl } from "../utils/media-embed";
 import { getEmbedUrl } from "../utils/embed-url";
 import {
 	getBasicRef,
+	getBlueskyPostRef,
 	getFacebookPostRef,
 	getInstagramEmbedRef,
 	getRedditPostRef,
@@ -112,6 +115,26 @@ const threadsProcessor: Processor = {
 	},
 };
 
+/** Bluesky post embed (oEmbed + embed.bsky.app script). */
+const blueskyProcessor: Processor = {
+	name: "bluesky",
+	async handle(
+		url: string,
+		context: ProcessorContext,
+	): Promise<ProcessorResult> {
+		const postUrl = getBlueskyPostRef(url);
+		if (!postUrl) return { handled: false };
+		const fragment = await fetchBlueskyOembedFragment(postUrl);
+		if (!fragment) return { handled: false };
+		const html = buildBlueskyEmbedHtml(
+			fragment,
+			postUrl,
+			context.acceptLanguage,
+		);
+		return { handled: true, response: htmlResponse(html, context) };
+	},
+};
+
 /** Reddit post embed. */
 const redditProcessor: Processor = {
 	name: "reddit",
@@ -190,6 +213,7 @@ export const defaultProcessors: Processor[] = [
 	steamProcessor,
 	telegramProcessor,
 	threadsProcessor,
+	blueskyProcessor,
 	redditProcessor,
 	tiktokProcessor,
 	mediaProcessor,

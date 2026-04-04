@@ -4,6 +4,7 @@ import { host } from "./url";
  * If the URL is a known social/video platform with an embed page, return the embed URL; else null.
  * Covers: YouTube, Vimeo, Twitch, TikTok, Dailymotion, Twitter/X, Instagram, Spotify, SoundCloud,
  * Reddit, CodePen, Figma, Loom, Pinterest, LinkedIn, Giphy, Steam.
+ * Bluesky is handled separately: HTML page from oEmbed + embed.bsky.app (no direct iframe URL).
  * Telegram is handled separately: we serve an HTML page that loads the official post widget (t.me cannot be iframed).
  */
 export function getEmbedUrl(url: string): string | null {
@@ -215,6 +216,9 @@ export function getEmbedUrl(url: string): string | null {
 			h === "www.threads.com"
 		)
 			return null;
+
+		// Bluesky: handled via HTML page from embed.bsky.app oEmbed + embed.js
+		if (h === "bsky.app" || h === "www.bsky.app") return null;
 
 		return null;
 	} catch {

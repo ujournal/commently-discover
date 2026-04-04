@@ -125,6 +125,49 @@ export function buildTelegramEmbedHtml(
   });
 }
 
+const BLUESKY_OEMBED_URL = "https://embed.bsky.app/oembed";
+
+/** Fetch official post embed markup (blockquote + script) from Bluesky oEmbed. */
+export async function fetchBlueskyOembedFragment(
+  postUrl: string,
+): Promise<string | null> {
+  try {
+    const endpoint = `${BLUESKY_OEMBED_URL}?url=${encodeURIComponent(postUrl)}`;
+    const res = await fetch(endpoint, {
+      headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(12_000),
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data = (await res.json()) as { html?: unknown };
+    if (typeof data.html !== "string" || !data.html.includes("bluesky-embed")) {
+      return null;
+    }
+    return data.html;
+  } catch {
+    return null;
+  }
+}
+
+/** Build HTML page that embeds a Bluesky post via oEmbed snippet + embed.bsky.app/static/embed.js. */
+export function buildBlueskyEmbedHtml(
+  oembedHtmlFragment: string,
+  postUrl: string,
+  acceptLanguage: string | null,
+): string {
+  const inner = oembedHtmlFragment.trim();
+  return buildEmbedPageHtml({
+    title: "Bluesky post",
+    bodyContent: `  ${inner}`,
+    scriptEmbedSkeleton: true,
+    fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Bluesky"),
+    fallbackHref: postUrl,
+    wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 600px; margin: 0 auto; }
+    .embed-wrap blockquote { margin: 0 auto; }`,
+  });
+}
+
 /** Build HTML page that embeds a Threads post via the official blockquote + embed.js (same pattern as X/Telegram). */
 export function buildThreadsEmbedHtml(
   postUrl: string,
