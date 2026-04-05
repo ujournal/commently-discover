@@ -164,7 +164,8 @@ export function buildBlueskyEmbedHtml(
     fallbackLabel: getViewInPlatformLabel(acceptLanguage, "Bluesky"),
     fallbackHref: postUrl,
     wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 600px; margin: 0 auto; }
-    .embed-wrap blockquote { margin: 0 auto; }`,
+    .embed-wrap blockquote { margin: 0 auto; }
+    .embed-wrap .bluesky-embed { margin-top: 0 !important; margin-bottom: 0 !important; }`,
   });
 }
 
