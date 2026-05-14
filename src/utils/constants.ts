@@ -37,6 +37,21 @@ export const EMBED_RESIZE_SCRIPT = `
 })();
 `;
 
+/** Fixed height (px) for direct media file embed iframes (video / audio / image). */
+export const EMBED_MEDIA_FIXED_HEIGHT_PX = 300;
+
+/** Same postMessage shape as EMBED_RESIZE_SCRIPT, but always reports EMBED_MEDIA_FIXED_HEIGHT_PX. */
+export const EMBED_RESIZE_SCRIPT_MEDIA = `
+(function() {
+  var H = ${EMBED_MEDIA_FIXED_HEIGHT_PX};
+  function send() {
+    try { window.parent.postMessage({ type: "commently-discover-resize", height: H }, "*"); } catch (e) {}
+  }
+  send();
+  window.addEventListener("load", send);
+})();
+`;
+
 /** Resize script with max height cap (used for Steam widget). */
 export const EMBED_RESIZE_SCRIPT_MAX_HEIGHT = `
 (function() {

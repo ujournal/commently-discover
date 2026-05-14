@@ -1,6 +1,13 @@
+import {
+	EMBED_MEDIA_FIXED_HEIGHT_PX,
+	EMBED_RESIZE_SCRIPT_MEDIA,
+} from "./constants";
 import { buildEmbedPageHtml } from "./embed-page";
 import { escapeHtml } from "./html";
 import { getViewInPlatformLabel } from "./i18n";
+
+const H = EMBED_MEDIA_FIXED_HEIGHT_PX;
+const mediaEmbedWrapperBase = `.embed-wrap { padding: 0; width: 100%; height: ${H}px; min-height: ${H}px; max-height: ${H}px; }`;
 
 function getLowercaseFileExtension(url: string): string | null {
 	try {
@@ -32,9 +39,10 @@ function buildMediaEmbedHtml(
 			fallbackLabel,
 			fallbackHref: mediaUrl,
 			showFallbackLink: false,
+			resizeScript: EMBED_RESIZE_SCRIPT_MEDIA,
 			bodyStyle: "margin:0; background: transparent;",
-			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; max-height: 70dvh; }
-    .embed-wrap video { width: 100%; height: 100%; max-height: 70dvh; object-fit: contain; background: transparent; }`,
+			wrapperStyle: `${mediaEmbedWrapperBase}
+    .embed-wrap video { width: 100%; height: 100%; object-fit: contain; background: transparent; }`,
 		});
 	}
 
@@ -44,8 +52,10 @@ function buildMediaEmbedHtml(
 			bodyContent: `  <audio controls preload="metadata"><source src="${safeUrl}"${typeAttr}></audio>`,
 			fallbackLabel,
 			fallbackHref: mediaUrl,
+			showFallbackLink: false,
+			resizeScript: EMBED_RESIZE_SCRIPT_MEDIA,
 			bodyStyle: "margin:0; background: transparent;",
-			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; }
+			wrapperStyle: `${mediaEmbedWrapperBase}
     .embed-wrap audio { width: 100%; max-width: 100%; display: block; }`,
 		});
 	}
@@ -56,8 +66,10 @@ function buildMediaEmbedHtml(
 		bodyContent: `  <img src="${safeUrl}" alt="">`,
 		fallbackLabel,
 		fallbackHref: mediaUrl,
+		showFallbackLink: false,
+		resizeScript: EMBED_RESIZE_SCRIPT_MEDIA,
 		bodyStyle: "margin:0; background: transparent;",
-		wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; }
+		wrapperStyle: `${mediaEmbedWrapperBase}
     .embed-wrap img { width: 100%; height: 100%; object-fit: contain; display: block; }`,
 	});
 }
