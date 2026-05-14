@@ -31,8 +31,9 @@ function buildMediaEmbedHtml(
 			bodyContent: `  <video controls playsinline preload="metadata"><source src="${safeUrl}"${typeAttr}></video>`,
 			fallbackLabel,
 			fallbackHref: mediaUrl,
+			showFallbackLink: false,
 			bodyStyle: "margin:0; background: transparent;",
-			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; height: 100%; }
+			wrapperStyle: `.embed-wrap { padding: 0; width: 100%; min-height: 0 !important; aspect-ratio: 1 / 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
     .embed-wrap video { width: 100%; height: 100%; object-fit: contain; background: transparent; }`,
 		});
 	}

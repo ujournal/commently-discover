@@ -25,6 +25,8 @@ export type EmbedPageOptions = {
   resizeScript?: string;
   /** When true, show a pulsing skeleton until a script-loaded widget appears (iframe / known widget root). */
   scriptEmbedSkeleton?: boolean;
+  /** When false, omit the fallback link below the embed (e.g. native video is fully usable in-frame). Default true. */
+  showFallbackLink?: boolean;
 };
 
 /** Build a standardized HTML page for any embed: shared wrapper, base styles, and fallback link. */
@@ -39,6 +41,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
     wrapperStyle = "",
     resizeScript = EMBED_RESIZE_SCRIPT,
     scriptEmbedSkeleton = false,
+    showFallbackLink = true,
   } = opts;
   const safeTitle = escapeHtml(title);
   const safeFallbackHref = escapeHtml(fallbackHref);
@@ -53,9 +56,10 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
   </div>
   <div class="embed-body">\n${bodyContent}\n  </div>`
     : bodyContent;
-  const fallbackAfterWrap = scriptEmbedSkeleton
-    ? ""
-    : `\n  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>`;
+  const fallbackAfterWrap =
+    scriptEmbedSkeleton || !showFallbackLink
+      ? ""
+      : `\n  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>`;
   const skeletonStyles = scriptEmbedSkeleton
     ? `
     @keyframes embed-skeleton-pulse {
