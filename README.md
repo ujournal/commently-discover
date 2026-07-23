@@ -1,66 +1,38 @@
 # Commently Discover
 
-Cloudflare Worker для отримання прев’ю посилань (unfurl/embed). Обробляє запити з URL і повертає HTML-ембеди для соцмереж та платформ.
+Cloudflare Worker that unfurls a URL into JSON the client can use to render an embed.
 
-## Що робить воркер
+## Response shapes
 
-- **Ембеди посилань** — за параметром `?url=...` або за base64-шляхом повертає HTML для вбудовування поста/відео з підтримуваних платформ.
-- **Підтримувані платформи**: Twitter/X, Facebook, Instagram, Reddit, Steam, Telegram, Threads, TikTok.
-- **Додатково**: віддає `favicon.ico`, `robots.txt`, кешує відповіді.
-- **Мова**: можна задати через `?lang=uk` або заголовок `Accept-Language`.
-
-## Як задеплоїти воркер
-
-### Передумови
-
-- [Node.js](https://nodejs.org/) (рекомендовано LTS)
-- обліковий запис [Cloudflare](https://dash.cloudflare.com/sign-up) та налаштований [Wrangler CLI](https://developers.cloudflare.com/workers/wrangler/install-and-update/)
-
-### Кроки
-
-1. **Клонувати репозиторій і встановити залежності:**
-
-   ```bash
-   git clone <url-репозиторію> commently-discover
-   cd commently-discover
-   npm install
-   ```
-
-2. **Увійти в Cloudflare через Wrangler** (якщо ще не залогінені):
-
-   ```bash
-   npx wrangler login
-   ```
-
-3. **Задеплоїти воркер:**
-
-   ```bash
-   npm run deploy
-   ```
-
-   Або напряму:
-
-   ```bash
-   npx wrangler deploy
-   ```
-
-4. Після деплою воркер буде доступний за адресою виду  
-   `https://commently-discover.<ваш-піддомен>.workers.dev` (або ваш власний домен, якщо налаштований у Cloudflare).
-
-### Локальна розробка
-
-```bash
-npm run dev
+```json
+{ "type": "iframe", "url": "https://…", "iframeSrc": "https://…/embed/…" }
 ```
 
-Запускається локальний сервер для тестування (зазвичай `http://localhost:8787`).
-
-### Конфігурація
-
-Основні налаштування — у файлі `wrangler.jsonc`: ім’я воркера, compatibility date, статичні ассети (`assets`). Для секретів використовуйте:
-
-```bash
-npx wrangler secret put SECRET_NAME
+```json
+{
+  "type": "card",
+  "url": "https://…",
+  "title": "…",
+  "description": "…",
+  "image": "data:image/…;base64,…",
+  "favicon": "data:image/…;base64,…",
+  "siteName": "example.com"
+}
 ```
 
-Детальніше: [документація Wrangler](https://developers.cloudflare.com/workers/wrangler/configuration/).
+- **iframe** — known platform embed URL (YouTube, Vimeo, Spotify, Instagram, Reddit, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
+- **card** — everything else: OG metadata + images as data URLs. Client builds a link preview card.
+
+Request: `?url=https://…` or a base64 path segment. Optional `?lang=uk` / `Accept-Language`.
+
+Also serves `favicon.ico` and `robots.txt`; successful responses are cached.
+
+## Deploy
+
+```bash
+npm install
+npx wrangler login   # if needed
+npm run deploy
+```
+
+Local: `npm run dev` → usually `http://localhost:8787`.

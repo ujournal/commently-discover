@@ -1,12 +1,9 @@
 import { host } from "./url";
 
 /**
- * If the URL is a known social/video platform with an embed page, return the embed URL; else null.
- * Covers: YouTube, Vimeo, Twitch, TikTok, Dailymotion, Twitter/X, Instagram, Spotify, SoundCloud,
- * Reddit, CodePen, Figma, Loom, Pinterest, LinkedIn, Giphy, Steam.
- * Bluesky is handled separately: HTML page from oEmbed + embed.bsky.app (no direct iframe URL).
- * Mastodon is handled separately: HTML page with official blockquote + instance embed.js.
- * Telegram is handled separately: we serve an HTML page that loads the official post widget (t.me cannot be iframed).
+ * If the URL has a known iframe-able embed page, return that URL; else null.
+ * Platforms that only support script widgets (X, Facebook, Telegram, Threads, Bluesky)
+ * return null so the caller falls back to a link card.
  */
 export function getEmbedUrl(url: string): string | null {
 	try {
@@ -24,25 +21,28 @@ export function getEmbedUrl(url: string): string | null {
 					videoId = u.pathname.replace(/^\/shorts\//, "").split("/")[0] || null;
 				}
 			}
-			if (videoId && /^[\w-]{11}$/.test(videoId))
+			if (videoId && /^[\w-]{11}$/.test(videoId)) {
 				return `https://www.youtube.com/embed/${videoId}`;
+			}
 			return null;
 		}
 
-		// Vimeo: vimeo.com/123456789, vimeo.com/channels/name/123
+		// Vimeo
 		if (h === "vimeo.com") {
 			const m = u.pathname.match(/\/(\d+)(?:\/|$)/);
 			if (m) return `https://player.vimeo.com/video/${m[1]}`;
 			return null;
 		}
 
-		// Twitch: channel, video, clip
+		// Twitch
 		if (h === "twitch.tv" || h === "www.twitch.tv") {
 			const path = u.pathname.replace(/^\/+/, "").split("/");
-			if (path[0] === "videos" && path[1])
+			if (path[0] === "videos" && path[1]) {
 				return `https://player.twitch.tv/?video=${path[1]}`;
-			if (path[0] === "clip" && path[1])
+			}
+			if (path[0] === "clip" && path[1]) {
 				return `https://clips.twitch.tv/embed?clip=${path[1]}`;
+			}
 			if (
 				path[0] &&
 				!path[0].startsWith("videos") &&
@@ -58,27 +58,33 @@ export function getEmbedUrl(url: string): string | null {
 			return null;
 		}
 
-		// TikTok: handled via HTML page with iframe (same pattern as Instagram/Reddit)
-		if (h === "tiktok.com" || h === "www.tiktok.com") return null;
+		// TikTok
+		if (h === "tiktok.com" || h === "www.tiktok.com") {
+			const m = u.pathname.match(/\/video\/(\d+)/);
+			if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
+			return null;
+		}
 
-		// Dailymotion: dailymotion.com/video/x5abcde
+		// Dailymotion
 		if (h === "dailymotion.com" || h === "www.dailymotion.com") {
 			const m = u.pathname.match(/\/video\/([a-zA-Z0-9]+)/);
 			if (m) return `https://www.dailymotion.com/embed/video/${m[1]}`;
 			return null;
 		}
 
-		// Twitter/X: handled via HTML page with blockquote + widgets.js (redirect to embed URL gives "Access denied" in iframes)
-		if (h === "twitter.com" || h === "x.com") return null;
+		// Instagram
+		if (h === "instagram.com" || h === "www.instagram.com") {
+			const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
+			if (!m) return null;
+			const path = u.pathname
+				.replace(/\/+$/, "")
+				.split("/")
+				.slice(0, 4)
+				.join("/");
+			return `https://www.instagram.com${path}/embed/`;
+		}
 
-		// Facebook: handled via HTML page with fb-post + SDK (same pattern as X/Telegram)
-		if (h === "facebook.com" || h === "fb.com" || h === "m.facebook.com")
-			return null;
-
-		// Instagram: handled via HTML page with iframe + resize script (same pattern as tg/fb/x)
-		if (h === "instagram.com" || h === "www.instagram.com") return null;
-
-		// Spotify: open.spotify.com/track|album|playlist|artist|show|episode/xxx
+		// Spotify
 		if (h === "open.spotify.com") {
 			const m = u.pathname.match(
 				/^\/(track|album|playlist|artist|show|episode)\/([a-zA-Z0-9]+)/,
@@ -87,7 +93,7 @@ export function getEmbedUrl(url: string): string | null {
 			return null;
 		}
 
-		// SoundCloud: already an embed URL (e.g. iframe src)
+		// SoundCloud
 		if (h === "w.soundcloud.com") {
 			if (/^\/player\/?$/.test(u.pathname)) {
 				const embedTarget = u.searchParams.get("url");
@@ -95,44 +101,47 @@ export function getEmbedUrl(url: string): string | null {
 			}
 			return null;
 		}
-
-		// SoundCloud: api.soundcloud.com/tracks/xxx
 		if (h === "api.soundcloud.com") {
 			const m = u.pathname.match(/^\/tracks\/(.+)/);
-			if (m && m[1]) {
+			if (m?.[1]) {
 				return `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.href)}`;
 			}
 			return null;
 		}
-
-		// SoundCloud: player for track pages (user/track-slug); regular embed/card for discover, profiles, etc.
 		if (h === "soundcloud.com") {
 			const path = u.pathname.replace(/^\/+|\/+$/, "");
 			const segments = path.split("/").filter(Boolean);
-			const isDiscover = segments[0] === "discover";
-			if (!isDiscover && segments.length >= 2) {
+			if (segments[0] !== "discover" && segments.length >= 2) {
 				return `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.origin + "/" + path)}`;
 			}
 			return null;
 		}
 
-		// Reddit: handled via HTML page with iframe (same pattern as Instagram/Steam)
+		// Reddit
 		if (
 			h === "reddit.com" ||
 			h === "www.reddit.com" ||
 			h === "old.reddit.com" ||
 			h === "new.reddit.com"
-		)
-			return null;
+		) {
+			const path = u.pathname.replace(/^\/+|\/+$/, "");
+			const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)/);
+			if (!m) return null;
+			const pathNorm = path.replace(/\/+$/, "");
+			return `https://www.reddit.com/${pathNorm}/embed/`.replace(
+				/\/+$/,
+				"/",
+			);
+		}
 
-		// CodePen: codepen.io/user/pen/xxx or /user/details/xxx
+		// CodePen
 		if (h === "codepen.io") {
 			const m = u.pathname.match(/\/(?:pen|details)\/([^/]+)/);
 			if (m) return `https://codepen.io${u.pathname.replace(/\/?$/, "")}/embed`;
 			return null;
 		}
 
-		// Figma: figma.com/file/xxx or design/xxx
+		// Figma
 		if (h === "figma.com" || h === "www.figma.com") {
 			if (/^\/(file|design|proto)\/[^/]+/.test(u.pathname)) {
 				return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
@@ -140,33 +149,29 @@ export function getEmbedUrl(url: string): string | null {
 			return null;
 		}
 
-		// Loom: loom.com/share/xxx
+		// Loom
 		if (h === "loom.com" || h === "www.loom.com") {
 			const m = u.pathname.match(/\/share\/([a-zA-Z0-9]+)/);
 			if (m) return `https://www.loom.com/embed/${m[1]}`;
 			return null;
 		}
 
-		// Pinterest: pinterest.com/pin/1234567890123456789
+		// Pinterest
 		if (
 			h === "pinterest.com" ||
 			h === "pinterest.co.uk" ||
 			h === "pinterest.ca" ||
 			h === "pin.it"
 		) {
-			let pinId: string | null = null;
-			if (h === "pin.it") {
-				// pin.it short links redirect; we can't resolve here, skip
-				return null;
-			}
+			if (h === "pin.it") return null;
 			const pinMatch = u.pathname.match(/\/pin\/(\d+)/);
-			if (pinMatch) pinId = pinMatch[1];
-			if (pinId)
-				return `https://assets.pinterest.com/ext/embed.html?id=${pinId}`;
+			if (pinMatch) {
+				return `https://assets.pinterest.com/ext/embed.html?id=${pinMatch[1]}`;
+			}
 			return null;
 		}
 
-		// LinkedIn: linkedin.com/posts/...activity-ACTIVITY_ID-... or feed/update/urn:li:activity:ACTIVITY_ID
+		// LinkedIn
 		if (h === "linkedin.com" || h === "www.linkedin.com") {
 			let activityId: string | null = null;
 			const urnMatch = u.pathname.match(/urn:li:activity:(\d+)/);
@@ -175,12 +180,13 @@ export function getEmbedUrl(url: string): string | null {
 				const activityMatch = u.pathname.match(/activity-(\d+)/);
 				if (activityMatch) activityId = activityMatch[1];
 			}
-			if (activityId)
+			if (activityId) {
 				return `https://www.linkedin.com/embed/feed/update/urn:li:activity:${activityId}`;
+			}
 			return null;
 		}
 
-		// Giphy: giphy.com/gifs/.../ID or giphy.com/gifs/ID or media.giphy.com/media/ID/...
+		// Giphy
 		if (
 			h === "giphy.com" ||
 			h === "www.giphy.com" ||
@@ -200,26 +206,32 @@ export function getEmbedUrl(url: string): string | null {
 					gifId = segments[segments.length - 1] || null;
 				}
 			}
-			if (gifId && /^[\w-]+$/.test(gifId))
+			if (gifId && /^[\w-]+$/.test(gifId)) {
 				return `https://giphy.com/embed/${gifId}`;
+			}
 			return null;
 		}
 
-		// Steam: handled via HTML wrapper page with iframe + resize script (same pattern as tg/fb/x)
-		if (h === "store.steampowered.com" || h === "steamcommunity.com")
+		// Steam
+		if (h === "store.steampowered.com" || h === "steamcommunity.com") {
+			const appMatch = u.pathname.match(/\/app\/(\d+)/);
+			if (appMatch) {
+				return `https://store.steampowered.com/widget/${appMatch[1]}/`;
+			}
 			return null;
+		}
 
-		// Threads: handled via HTML page with blockquote + embed.js (same pattern as X/Telegram)
-		if (
-			h === "threads.net" ||
-			h === "www.threads.net" ||
-			h === "threads.com" ||
-			h === "www.threads.com"
-		)
-			return null;
-
-		// Bluesky: handled via HTML page from embed.bsky.app oEmbed + embed.js
-		if (h === "bsky.app" || h === "www.bsky.app") return null;
+		// Mastodon: /@handle/{numeric-id} on any instance
+		{
+			let path = u.pathname.replace(/\/+$/, "");
+			if (path.endsWith("/embed")) {
+				path = path.slice(0, -"/embed".length);
+			}
+			const m = path.match(/^\/@([^/]+)\/(\d+)$/);
+			if (m && (u.protocol === "http:" || u.protocol === "https:")) {
+				return `${u.origin}/@${m[1]}/${m[2]}/embed`;
+			}
+		}
 
 		return null;
 	} catch {

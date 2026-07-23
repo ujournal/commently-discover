@@ -7,23 +7,34 @@ import {
 import { describe, it, expect } from "vitest";
 import worker from "../src/index";
 
-// For now, you'll need to do something like this to get a correctly-typed
-// `Request` to pass to `worker.fetch()`.
 const IncomingRequest = Request<unknown, IncomingRequestCfProperties>;
 
-describe("Hello World worker", () => {
-	it("responds with Hello World! (unit style)", async () => {
+describe("discover worker", () => {
+	it("returns 400 JSON for missing url (unit)", async () => {
 		const request = new IncomingRequest("http://example.com");
-		// Create an empty context to pass to `worker.fetch()`.
 		const ctx = createExecutionContext();
 		const response = await worker.fetch(request, env, ctx);
-		// Wait for all `Promise`s passed to `ctx.waitUntil()` to settle before running test assertions
 		await waitOnExecutionContext(ctx);
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({ error: "Bad Request" });
 	});
 
-	it("responds with Hello World! (integration style)", async () => {
+	it("returns 400 JSON for missing url (integration)", async () => {
 		const response = await SELF.fetch("https://example.com");
-		expect(await response.text()).toMatchInlineSnapshot(`"Hello World!"`);
+		expect(response.status).toBe(400);
+		expect(await response.json()).toEqual({ error: "Bad Request" });
+	});
+
+	it("returns iframe JSON for YouTube", async () => {
+		const response = await SELF.fetch(
+			"https://example.com/?url=https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+		);
+		expect(response.status).toBe(200);
+		expect(response.headers.get("content-type")).toMatch(/application\/json/);
+		expect(await response.json()).toEqual({
+			type: "iframe",
+			url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+			iframeSrc: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+		});
 	});
 });

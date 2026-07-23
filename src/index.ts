@@ -11,7 +11,11 @@ export type {
 	ProcessorContext,
 	ProcessorResult,
 } from "./processors";
-export type { EmbedPageOptions } from "./utils/embed-page";
+export type {
+	DiscoverCard,
+	DiscoverIframe,
+	DiscoverResponse,
+} from "./utils/discover";
 
 interface Env {
 	ASSETS: Fetcher;
@@ -66,7 +70,6 @@ export default {
 			return response;
 		}
 
-		// ?lang=uk shims Accept-Language when header is missing or to override
 		const acceptLanguage =
 			searchParams.get("lang") ?? request.headers.get("Accept-Language");
 		const response = await runProcessors(target, {
@@ -75,11 +78,9 @@ export default {
 
 		const tag = getCacheTagFromUrl(target);
 		const out =
-			(response.ok || response.status === 302) && tag
-				? withCacheTag(response, tag)
-				: response;
+			response.ok && tag ? withCacheTag(response, tag) : response;
 
-		if (response.ok || response.status === 302) {
+		if (response.ok) {
 			ctx.waitUntil(cache.put(request, out.clone()));
 		}
 

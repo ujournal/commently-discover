@@ -3,8 +3,6 @@
  */
 export type ProcessorContext = {
 	acceptLanguage: string | null;
-	/** Default headers for HTML responses (content-type, cache, etc.). */
-	htmlHeaders: HeadersInit;
 };
 
 /**
@@ -16,7 +14,7 @@ export type ProcessorResult =
 
 /**
  * A URL processor: tries to handle a URL; if not, returns handled: false so the next processor runs.
- * Processors run in order. The last processor should always handle (e.g. basic link card).
+ * Processors run in order. The last processor should always handle (e.g. link card).
  */
 export type Processor = {
 	/** Optional name for debugging / logging. */
