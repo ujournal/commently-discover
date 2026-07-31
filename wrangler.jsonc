@@ -33,7 +33,9 @@
    * Note: Use secrets to store sensitive data.
    * https://developers.cloudflare.com/workers/configuration/secrets/
    */
-  // "vars": {  "MY_VARIABLE": "production_value" }
+  "vars": {
+    "ALLOWED_ORIGINS": "http://127.0.0.1:8000,http://localhost:8000,https://www.ujournal.com.ua"
+  },
   /**
    * Static Assets
    * https://developers.cloudflare.com/workers/static-assets/binding/

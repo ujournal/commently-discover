@@ -1,5 +1,10 @@
 import { runProcessors } from "./processors";
 import { getCacheTagFromUrl, withCacheTag } from "./utils/cache-tag";
+import {
+	getPreflightResponse,
+	parseAllowedOrigins,
+	withCors,
+} from "./utils/cors";
 import { getFaviconResponse } from "./utils/favicon";
 import { getInvalidUrlResponse } from "./utils/invalid-url";
 import { getRobotsTxtResponse } from "./utils/robots";
@@ -19,6 +24,8 @@ export type {
 
 interface Env {
 	ASSETS: Fetcher;
+	/** Comma-separated list of allowed CORS origins. */
+	ALLOWED_ORIGINS?: string;
 }
 
 export default {
@@ -28,6 +35,11 @@ export default {
 		ctx: ExecutionContext,
 	): Promise<Response> {
 		const cache = caches.default;
+		const allowedOrigins = parseAllowedOrigins(env.ALLOWED_ORIGINS);
+
+		if (request.method === "OPTIONS") {
+			return getPreflightResponse(request, allowedOrigins);
+		}
 
 		const cachedResponse = await cache.match(request);
 		if (cachedResponse) {
@@ -65,7 +77,7 @@ export default {
 		}
 
 		if (!target || !target.match(/^https?:\/\//)) {
-			const response = getInvalidUrlResponse();
+			const response = withCors(getInvalidUrlResponse(), request, allowedOrigins);
 			ctx.waitUntil(cache.put(request, response.clone()));
 			return response;
 		}
@@ -79,11 +91,12 @@ export default {
 		const tag = getCacheTagFromUrl(target);
 		const out =
 			response.ok && tag ? withCacheTag(response, tag) : response;
+		const outWithCors = withCors(out, request, allowedOrigins);
 
 		if (response.ok) {
-			ctx.waitUntil(cache.put(request, out.clone()));
+			ctx.waitUntil(cache.put(request, outWithCors.clone()));
 		}
 
-		return out;
+		return outWithCors;
 	},
 };

@@ -2,11 +2,53 @@
 
 Cloudflare Worker that unfurls a URL into JSON the client can use to render an embed.
 
-## Response shapes
+## Request
+
+`GET` — no auth required.
+
+Target URL is passed one of two ways (either is fine):
+
+1. Query parameter:
+
+   ```
+   /?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ
+   ```
+
+2. Base64-encoded URL as the last path segment (`base64` of `https://example.com/` → `aHR0cHM6Ly9leGFtcGxlLmNvbS8=`):
+
+   ```
+   /aHR0cHM6Ly9leGFtcGxlLmNvbS8=
+   ```
+
+Optional params:
+
+| Param  | Effect                                                              |
+| ------ | ------------------------------------------------------------------- |
+| `lang` | Overrides the `Accept-Language` header (e.g. `?lang=uk`, `?lang=en`) |
+
+If no valid `http(s)` URL is found, the worker returns `400`.
+
+### CORS
+
+Cross-origin reads are only allowed from origins in the `ALLOWED_ORIGINS` env
+var (comma-separated, configured in `wrangler.jsonc`). Responses reflect the
+origin via `Access-Control-Allow-Origin` + `Vary: Origin`; disallowed origins
+are blocked (`OPTIONS` → 403). Non-browser clients without an `Origin` header
+are unaffected. If the var is unset/empty, all cross-origin reads are blocked.
+
+## Responses
+
+### `200` — `type: "iframe"`
+
+Known platform embed URL (YouTube, Vimeo, Spotify, Instagram, Reddit, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
 
 ```json
 { "type": "iframe", "url": "https://…", "iframeSrc": "https://…/embed/…" }
 ```
+
+### `200` — `type: "card"`
+
+Everything else: OG metadata + images as data URLs. Client builds a link preview card.
 
 ```json
 {
@@ -20,10 +62,21 @@ Cloudflare Worker that unfurls a URL into JSON the client can use to render an e
 }
 ```
 
-- **iframe** — known platform embed URL (YouTube, Vimeo, Spotify, Instagram, Reddit, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
-- **card** — everything else: OG metadata + images as data URLs. Client builds a link preview card.
+### `400` — missing or invalid URL
 
-Request: `?url=https://…` or a base64 path segment. Optional `?lang=uk` / `Accept-Language`.
+```json
+{ "error": "Bad Request" }
+```
+
+## Examples
+
+```bash
+curl "https://your-worker.workers.dev/?url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DdQw4w9WgXcQ"
+# { "type": "iframe", "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ", "iframeSrc": "https://www.youtube.com/embed/dQw4w9WgXcQ" }
+
+curl "https://your-worker.workers.dev/?url=https%3A%2F%2Fexample.com"
+# { "type": "card", "url": "https://example.com", "title": "Example Domain", ... }
+```
 
 Also serves `favicon.ico` and `robots.txt`; successful responses are cached.
 
