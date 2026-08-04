@@ -83,7 +83,8 @@ ${fallbackLink}
   <style>
 ${EMBED_PAGE_BODY_BASE}
     html, body { ${bodyStyle} }
-    .fallback a { color: ${fallbackLinkColor}; }
+    .embed-wrap a { color: ${fallbackLinkColor}; text-decoration: none; }
+    .embed-wrap a:hover { text-decoration: underline; }
 ${wrapperStyle ? `    ${wrapperStyle.replace(/\n/g, "\n    ")}` : ""}
 ${skeletonStyles}
   </style>
