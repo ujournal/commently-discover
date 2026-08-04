@@ -81,8 +81,7 @@ export function buildTwitterEmbedHtml(
 		ref: tweetHref,
 		bodyContent: `  <div id="tweet-container" class="tweet tweet-container"></div>\n  <script>${tweetScript}</script>`,
 		wrapperStyle: `
-		.embed-wrap blockquote { margin: 0 auto; }
-    .embed-wrap .twitter-tweet { margin: 0 auto !important; width: 100% !important; max-width: 100% !important; }
+		.embed-wrap .twitter-tweet { width: 100% !important; max-width: 100% !important; }
     .embed-wrap .twitter-tweet iframe { width: 100% !important; }`,
 		acceptLanguage,
 	});
@@ -117,8 +116,7 @@ export function buildFacebookEmbedHtml(
 		bodyContent: `  <div id="fb-root"></div>
   <div class="fb-post" data-href="${safeHref}" data-width="500"></div>
   <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v3.2"></script>`,
-		wrapperStyle: `.embed-wrap .fb-post { margin: 0 auto; background-color: #fff; }
-    .embed-wrap { max-width: 500px; }`,
+		wrapperStyle: `.embed-wrap .fb-post { background-color: #fff; }`,
 		acceptLanguage,
 	});
 }
@@ -154,8 +152,7 @@ export function buildTelegramEmbedHtml(
 		platform: "Telegram",
 		ref: postUrl,
 		bodyContent: `    <script async src="https://telegram.org/js/telegram-widget.js?22" data-telegram-post="${safeRef}" data-width="100%"></script>`,
-		wrapperStyle: `.embed-wrap { max-width: 550px; }
-    .embed-wrap iframe { max-width: 100%; }`,
+		wrapperStyle: `.embed-wrap iframe { max-width: 100%; }`,
 		acceptLanguage,
 	});
 }
@@ -199,8 +196,7 @@ export function buildThreadsEmbedHtml(
 		ref: postUrl,
 		bodyContent: `  <blockquote class="text-post-media" data-text-post-permalink="${safePostUrl}"></blockquote>
   <script async src="https://www.threads.net/embed.js" charset="utf-8"></script>`,
-		wrapperStyle: `.embed-wrap { max-width: 658px; }
-    .embed-wrap blockquote { margin: 0 auto; }`,
+		wrapperStyle: "",
 		acceptLanguage,
 	});
 }
@@ -262,9 +258,7 @@ export function buildBlueskyEmbedHtml(
 		platform: "Bluesky",
 		ref: postUrl,
 		bodyContent: `  ${inner}`,
-		wrapperStyle: `.embed-wrap { max-width: 600px; }
-    .embed-wrap blockquote { margin: 0 auto; }
-    .embed-wrap .bluesky-embed { margin-top: 0 !important; margin-bottom: 0 !important; }`,
+		wrapperStyle: `.embed-wrap .bluesky-embed { margin-top: 0 !important; margin-bottom: 0 !important; }`,
 		acceptLanguage,
 	});
 }
@@ -284,7 +278,7 @@ export function buildBlueskyIframeHtml(
 		ref: postUrl,
 		bodyContent: `    <iframe src="${safeSrc}" title="Bluesky post" loading="lazy"></iframe>`,
 		bodyStyle: "background: #fff;",
-		wrapperStyle: `.embed-wrap { width: 100%; max-width: 600px; border-radius: 8px; overflow: hidden; }
+		wrapperStyle: `.embed-wrap { width: 100%; border-radius: 8px; overflow: hidden; }
     .embed-wrap iframe { width: 100%; height: 600px; }`,
 		scriptEmbedSkeleton: false,
 		acceptLanguage,
@@ -342,8 +336,7 @@ export function buildRedditEmbedHtml(
   <a href="${safePostUrl}">${safeTitleText}</a>
 </blockquote>
   <script async src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>`,
-		wrapperStyle: `.embed-wrap { max-width: 640px; }
-    .embed-wrap blockquote { margin: 0 auto; }`,
+		wrapperStyle: "",
 		acceptLanguage,
 	});
 }

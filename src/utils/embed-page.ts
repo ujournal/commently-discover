@@ -52,26 +52,20 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
 ${fallbackLink}
   </div>`
 		: "";
-	// .embed-content holds the in-flow content; its height is what the resize
-	// script reports, so the wrapper can fill the frame and center content
-	// without breaking auto-resize. For script widgets the fallback lives in
-	// the skeleton, so only the widget markup is measured.
+	// For script widgets the fallback lives in the skeleton, so only the
+	// widget markup is measured. Non-script embeds append the fallback link.
 	const content = scriptEmbedSkeleton
 		? bodyContent
 		: `${bodyContent}\n${fallbackLink}`;
 	const skeletonStyles = scriptEmbedSkeleton
 		? `
-    .embed-wrap.embed-wrap--script:not(.embed-wrap--loaded) > .embed-content {
+    .embed-wrap.embed-wrap--script:not(.embed-wrap--loaded) > *:not(.embed-skeleton) {
       pointer-events: none;
     }
     .embed-wrap.embed-wrap--script > .embed-skeleton > .fallback {
       margin: 0;
-      padding: 0 1rem;
       pointer-events: auto;
       text-align: center;
-    }
-    .embed-wrap.embed-wrap--script > .embed-content {
-      min-width: 0;
     }`
 		: "";
 	return `<!DOCTYPE html>
@@ -92,9 +86,7 @@ ${skeletonStyles}
 <body${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
   <div class="${wrapClass}">
 ${skeleton}
-    <div class="embed-content">
 ${content}
-    </div>
   </div>
   <script>${resizeScript}</script>${scriptEmbedSkeleton ? `\n  <script>${EMBED_SKELETON_HIDE_SCRIPT}</script>` : ""}
 </body>

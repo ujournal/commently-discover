@@ -12,10 +12,9 @@ export const EMBED_PAGE_BODY_BASE = `
     html, body { height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     body { display: flex; flex-direction: column; }
-    .embed-wrap { width: 100%; margin: auto; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }
+    .embed-wrap { width: 100%; flex-shrink: 0; }
     .embed-wrap > * { width: 100% !important; }
-    .embed-content { min-width: 0; padding: 1rem; display: flex; flex-direction: column; align-items: center; }
-    .embed-wrap iframe { border: 0; display: block; margin: 0 auto; }
+    .embed-wrap iframe { border: 0; display: block; }
     .fallback { height: 3rem; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; }
     .fallback a { text-decoration: none; }
     .fallback a:hover { text-decoration: underline; }
@@ -24,18 +23,13 @@ export const EMBED_PAGE_BODY_BASE = `
 /** postMessage event type sent from embed pages to the parent frame (non-branded, part of the client contract). */
 export const EMBED_RESIZE_EVENT_TYPE = "embed-resize";
 
-/** Script injected into embed pages: reports the wrapper's natural height (includes its padding and any min-height floor) via postMessage so the outer frame can resize the iframe without scrollbars. */
+/** Script injected into embed pages: reports the wrapper's natural height via postMessage so the outer frame can resize the iframe without scrollbars. */
 export const EMBED_RESIZE_SCRIPT = `
 (function() {
   var lastHeight = 0;
   var wrap = document.querySelector(".embed-wrap") || document.body;
-  var content = document.querySelector(".embed-content");
   function measure() {
-    var h = Math.max(wrap.scrollHeight, wrap.offsetHeight || 0);
-    if (content) {
-      h = Math.max(h, content.scrollHeight, content.offsetHeight || 0);
-    }
-    return h;
+    return Math.max(wrap.scrollHeight, wrap.offsetHeight || 0);
   }
   function sendHeight() {
     var h = measure();
@@ -51,7 +45,6 @@ export const EMBED_RESIZE_SCRIPT = `
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(scheduleSend);
     ro.observe(wrap);
-    if (content) ro.observe(content);
     ro.observe(document.body);
   }
   var mo = new MutationObserver(scheduleSend);
