@@ -4,6 +4,7 @@ import {
 	buildEmbedHtmlForUrl,
 	getBlueskyPostParts,
 	getFacebookPostRef,
+	getRedditPostRef,
 	getTelegramPostRef,
 	getThreadsPostRef,
 	getTwitterStatusRef,
@@ -69,6 +70,24 @@ describe("script-widget embed refs", () => {
 		});
 		expect(getBlueskyPostParts("https://bsky.app/profile/user")).toBeNull();
 	});
+
+	it("extracts Reddit post ref", () => {
+		expect(
+			getRedditPostRef("https://www.reddit.com/r/test/comments/abc123/title/"),
+		).toEqual({
+			postUrl: "https://www.reddit.com/r/test/comments/abc123/title/",
+			subreddit: "test",
+			titleSlug: "title",
+		});
+		expect(
+			getRedditPostRef("https://old.reddit.com/r/test/comments/abc123"),
+		).toEqual({
+			postUrl: "https://www.reddit.com/r/test/comments/abc123/",
+			subreddit: "test",
+			titleSlug: null,
+		});
+		expect(getRedditPostRef("https://www.reddit.com/r/test")).toBeNull();
+	});
 });
 
 describe("buildEmbedHtmlForUrl", () => {
@@ -110,6 +129,16 @@ describe("buildEmbedHtmlForUrl", () => {
 
 	it("returns null for unknown URLs", async () => {
 		expect(await buildEmbedHtmlForUrl("https://example.com", null)).toBeNull();
+	});
+
+	it("builds a Reddit widget page", async () => {
+		const html = await buildEmbedHtmlForUrl(
+			"https://www.reddit.com/r/test/comments/abc123/title/",
+			"en",
+		);
+		expect(html).not.toBeNull();
+		expect(html!).toContain("embed.reddit.com/widgets.js");
+		expect(html!).toContain("r/test/comments/abc123");
 	});
 
 	it("builds a Bluesky oEmbed-free iframe fallback page", () => {

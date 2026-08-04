@@ -288,12 +288,76 @@ export function buildBlueskyIframeHtml(
 	});
 }
 
+/** Reddit post ref: canonical post URL, subreddit, and optional title slug. */
+export function getRedditPostRef(url: string): {
+	postUrl: string;
+	subreddit: string;
+	titleSlug: string | null;
+} | null {
+	try {
+		const u = new URL(url);
+		const h = host(u);
+		if (h !== "reddit.com" && h !== "old.reddit.com" && h !== "new.reddit.com") {
+			return null;
+		}
+		const path = u.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+		const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)(?:\/(.*))?$/);
+		if (!m) return null;
+		const subreddit = m[1];
+		const titleSlug = m[3] && m[3].length > 0 ? m[3] : null;
+		const postUrl = `https://www.reddit.com/${path}/`.replace(/\/+$/, "/");
+		return { postUrl, subreddit, titleSlug };
+	} catch {
+		return null;
+	}
+}
+
+/** Lowercase percent-encoding in a URL so it matches Reddit's embed format (e.g. %d1%87 not %D1%87). */
+function redditEmbedHref(url: string): string {
+	return url.replace(/%[0-9A-Fa-f]{2}/g, (m) => m.toLowerCase());
+}
+
+/** Build HTML page that embeds a Reddit post via the official embed.reddit.com/widgets.js widget. */
+export function buildRedditEmbedHtml(
+	postUrl: string,
+	titleSlug: string | null,
+	acceptLanguage: string | null,
+): string {
+	const safePostUrl = escapeHtml(redditEmbedHref(postUrl));
+	const titleText =
+		titleSlug != null ? titleSlug.replace(/_/g, " ") : "Reddit post";
+	const safeTitleText = escapeHtml(titleText);
+	return buildWidgetPage({
+		title: "Reddit post",
+		platform: "Reddit",
+		ref: postUrl,
+		bodyContent: `  <blockquote class="reddit-embed-bq" style="height:500px" data-embed-height="372">
+  <a href="${safePostUrl}">${safeTitleText}</a>
+</blockquote>
+  <script async src="https://embed.reddit.com/widgets.js" charset="UTF-8"></script>`,
+		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 640px; }
+    .embed-wrap blockquote { margin: 0 auto; }`,
+		acceptLanguage,
+	});
+}
+
 /**
- * Platforms without a direct iframe URL (X, Facebook, Telegram, Threads, Bluesky)
- * — the client iframes our self-served page, which loads the platform's official
- * widget script (frame-in-frame).
+ * Platforms without a direct iframe URL (X, Facebook, Telegram, Threads, Bluesky,
+ * Reddit) — the client iframes our self-served page, which loads the platform's
+ * official widget script (frame-in-frame).
  */
 export const WIDGET_EMBED_SPECS: EmbedSpec[] = [
+	{
+		name: "reddit",
+		detect: (url) => {
+			const r = getRedditPostRef(url);
+			return r ? { url: r.postUrl } : null;
+		},
+		buildPage: (url, acceptLanguage) => {
+			const r = getRedditPostRef(url);
+			return r ? buildRedditEmbedHtml(r.postUrl, r.titleSlug, acceptLanguage) : null;
+		},
+	},
 	{
 		name: "twitter",
 		detect: (url) => {

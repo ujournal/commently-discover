@@ -125,10 +125,13 @@ describe("getEmbedUrl", () => {
 		).toBe("https://mastodon.green/@VQuaschning/116344907918079968/embed");
 	});
 
-	it("returns Reddit embed URL", () => {
+	it("returns null for Reddit without origin (script widget, no direct iframe)", () => {
 		expect(
 			getEmbedUrl("https://www.reddit.com/r/test/comments/abc123/title/"),
-		).toBe("https://www.reddit.com/r/test/comments/abc123/title/embed/");
+		).toBeNull();
+		expect(
+			getEmbedUrl("https://old.reddit.com/r/test/comments/abc123"),
+		).toBeNull();
 	});
 
 	it("returns null for script-only platforms without origin (X, Telegram)", () => {
@@ -180,6 +183,14 @@ describe("getEmbedUrl", () => {
 		);
 		expect(getEmbedUrl("https://facebook.com/some/post/123", origin)).toBe(
 			`${origin}/embed/${toUrlSafeBase64("https://facebook.com/some/post/123")}`,
+		);
+		expect(
+			getEmbedUrl(
+				"https://www.reddit.com/r/test/comments/abc123/title/",
+				origin,
+			),
+		).toBe(
+			`${origin}/embed/${toUrlSafeBase64("https://www.reddit.com/r/test/comments/abc123/title/")}`,
 		);
 	});
 });

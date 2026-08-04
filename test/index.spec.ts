@@ -58,6 +58,8 @@ describe("discover worker", () => {
 		const html = await response.text();
 		expect(html).toContain("platform.twitter.com/widgets.js");
 		expect(html).toContain("1234567890");
+		expect(html).toContain('class="embed-content"');
+		expect(html).toContain('querySelector(".embed-content")');
 	});
 
 	it("served embed pages use a non-branded resize event", async () => {

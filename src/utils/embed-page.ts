@@ -46,16 +46,20 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
 	const wrapClass = scriptEmbedSkeleton
 		? "embed-wrap embed-wrap--script"
 		: "embed-wrap";
-	const innerBody = scriptEmbedSkeleton
+	const fallbackLink = `  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>`;
+	const skeleton = scriptEmbedSkeleton
 		? `  <div class="embed-skeleton" role="presentation">
     <div class="embed-skeleton__plate" aria-hidden="true"></div>
-    <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>
-  </div>
-  <div class="embed-body">\n${bodyContent}\n  </div>`
-		: bodyContent;
-	const fallbackAfterWrap = scriptEmbedSkeleton
-		? ""
-		: `\n  <p class="fallback"><a href="${safeFallbackHref}" target="_blank" rel="noopener noreferrer">${safeFallbackLabel}</a></p>`;
+${fallbackLink}
+  </div>`
+		: "";
+	// .embed-content holds the in-flow content; its height is what the resize
+	// script reports, so the wrapper can fill the frame and center content
+	// without breaking auto-resize. For script widgets the fallback lives in the
+	// (absolute) skeleton, so only the widget markup is measured.
+	const content = scriptEmbedSkeleton
+		? bodyContent
+		: `${bodyContent}\n${fallbackLink}`;
 	const skeletonStyles = scriptEmbedSkeleton
 		? `
     @keyframes embed-skeleton-pulse {
@@ -69,7 +73,7 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       position: relative;
       min-height: 240px;
     }
-    .embed-wrap.embed-wrap--script:not(.embed-wrap--loaded) > .embed-body {
+    .embed-wrap.embed-wrap--script:not(.embed-wrap--loaded) > .embed-content {
       pointer-events: none;
     }
     .embed-wrap.embed-wrap--script > .embed-skeleton {
@@ -112,11 +116,10 @@ export function buildEmbedPageHtml(opts: EmbedPageOptions): string {
       text-align: center;
       box-sizing: border-box;
     }
-    .embed-wrap.embed-wrap--script > .embed-body {
+    .embed-wrap.embed-wrap--script > .embed-content {
       position: relative;
       z-index: 1;
       min-width: 0;
-      flex: 1 1 auto;
     }`
 		: "";
 	return `<!DOCTYPE html>
@@ -135,8 +138,11 @@ ${skeletonStyles}
 </head>
 <body${scriptEmbedSkeleton ? ' class="embed-page--script-skeleton"' : ""}>
   <div class="${wrapClass}">
-${innerBody}
-  </div>${fallbackAfterWrap}
+${skeleton}
+    <div class="embed-content">
+${content}
+    </div>
+  </div>
   <script>${resizeScript}</script>${scriptEmbedSkeleton ? `\n  <script>${EMBED_SKELETON_HIDE_SCRIPT}</script>` : ""}
 </body>
 </html>`;

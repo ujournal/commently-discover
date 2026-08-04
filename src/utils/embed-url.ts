@@ -160,17 +160,6 @@ export const DIRECT_EMBED_SPECS: EmbedSpec[] = [
 		},
 	},
 	{
-		name: "reddit",
-		detect: hosts("reddit.com", "old.reddit.com", "new.reddit.com"),
-		directSrc: (url) => {
-			const path = new URL(url).pathname.replace(/^\/+|\/+$/, "");
-			const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)/);
-			if (!m) return null;
-			const pathNorm = path.replace(/\/+$/, "");
-			return `https://www.reddit.com/${pathNorm}/embed/`.replace(/\/+$/, "/");
-		},
-	},
-	{
 		name: "codepen",
 		detect: hosts("codepen.io"),
 		directSrc: (url) => {

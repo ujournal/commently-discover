@@ -9,10 +9,11 @@ export const CACHE_HEADERS = {
 /** Base styles shared by all worker-served embed pages (iframe src for script-widget platforms). */
 export const EMBED_PAGE_BODY_BASE = `
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
+    html, body { height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
-    .embed-wrap { margin: 0 auto; width: 100%; min-height: 100px; display: flex; flex-direction: column; justify-content: center; }
+    .embed-wrap { margin: 0 auto; width: 100%; min-height: 100%; display: flex; flex-direction: column; justify-content: center; }
     .embed-wrap > * { width: 100% !important; }
+    .embed-content { min-width: 0; }
     .embed-wrap iframe { border: 0; display: block; margin: 0 auto; }
     .fallback { height: 3rem; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; }
     .fallback a { text-decoration: none; }
@@ -22,17 +23,16 @@ export const EMBED_PAGE_BODY_BASE = `
 /** postMessage event type sent from embed pages to the parent frame (non-branded, part of the client contract). */
 export const EMBED_RESIZE_EVENT_TYPE = "embed-resize";
 
-/** Script injected into embed pages: sends scroll height to parent via postMessage so the outer frame can resize the iframe. */
+/** Script injected into embed pages: reports the CONTENT height (not the viewport-filling wrapper) via postMessage so the outer frame can resize the iframe without breaking auto-resize. */
 export const EMBED_RESIZE_SCRIPT = `
 (function() {
   var lastHeight = 0;
+  var content = document.querySelector(".embed-content") || document.body;
+  function measure() {
+    return Math.max(content.scrollHeight, content.offsetHeight || 0);
+  }
   function sendHeight() {
-    var h = Math.max(
-      document.documentElement.scrollHeight,
-      document.body.scrollHeight,
-      document.documentElement.offsetHeight,
-      document.body.offsetHeight || 0
-    );
+    var h = measure();
     if (h !== lastHeight) {
       lastHeight = h;
       try { window.parent.postMessage({ type: "${EMBED_RESIZE_EVENT_TYPE}", height: h }, "*"); } catch (e) {}
@@ -44,11 +44,11 @@ export const EMBED_RESIZE_SCRIPT = `
   sendHeight();
   if (window.ResizeObserver) {
     var ro = new ResizeObserver(scheduleSend);
+    ro.observe(content);
     ro.observe(document.body);
-    if (document.documentElement !== document.body) ro.observe(document.documentElement);
   }
   var mo = new MutationObserver(scheduleSend);
-  mo.observe(document.body, { childList: true, subtree: true });
+  mo.observe(content, { childList: true, subtree: true });
   window.addEventListener("load", scheduleSend);
 })();
 `;
