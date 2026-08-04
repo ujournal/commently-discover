@@ -14,7 +14,7 @@ export const EMBED_PAGE_BODY_BASE = `
     body { display: flex; flex-direction: column; }
     .embed-wrap { width: 100%; margin: auto 0; display: flex; flex-direction: column; justify-content: center; }
     .embed-wrap > * { width: 100% !important; }
-    .embed-content { min-width: 0; }
+    .embed-content { min-width: 0; padding: 1rem 0; display: flex; flex-direction: column; align-items: center; }
     .embed-wrap iframe { border: 0; display: block; margin: 0 auto; }
     .fallback { height: 3rem; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; }
     .fallback a { text-decoration: none; }
