@@ -82,7 +82,8 @@ export function buildTwitterEmbedHtml(
 		bodyContent: `  <div id="tweet-container" class="tweet tweet-container"></div>\n  <script>${tweetScript}</script>`,
 		wrapperStyle: `
 		.embed-wrap blockquote { margin: 0 auto; }
-    .embed-wrap .twitter-tweet { margin: 0 auto !important; }`,
+    .embed-wrap .twitter-tweet { margin: 0 auto !important; width: 100% !important; max-width: 100% !important; }
+    .embed-wrap .twitter-tweet iframe { width: 100% !important; }`,
 		acceptLanguage,
 	});
 }

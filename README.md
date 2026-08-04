@@ -44,15 +44,17 @@ Known platform embed URL (YouTube, Vimeo, Spotify, Instagram, TikTok, Steam, Mas
 
 For platforms that only expose a JS widget (X/Twitter, Facebook, Telegram, Threads, Bluesky, Reddit) the worker serves its own embed page that loads the official widget script, and `iframeSrc` points at it (`/embed/{base64url}`). Client iframes it the same way — the page then pulls in the platform embed (frame-in-frame).
 
+`aspect` is a client rendering hint: `"16:9"` for fixed-ratio video players (YouTube, Vimeo, Twitch, Dailymotion, Loom) that the client should give a 16:9 box; `"auto"` for content-sized frames that resize to their content — the client should NOT force a ratio on those.
+
 ```json
-{ "type": "iframe", "url": "https://…", "iframeSrc": "https://…/embed/…" }
+{ "type": "iframe", "url": "https://…", "iframeSrc": "https://…/embed/…", "aspect": "auto" }
 ```
 
 Example for X:
 
 ```bash
 curl "https://your-worker.workers.dev/?url=https%3A%2F%2Fx.com%2Fuser%2Fstatus%2F1234567890"
-# { "type": "iframe", "url": "https://x.com/user/status/1234567890", "iframeSrc": "https://your-worker.workers.dev/embed/aHR0cHM6Ly94LmNvbS91c2VyL3N0YXR1cy8xMjM0NTY3ODkw" }
+# { "type": "iframe", "url": "https://x.com/user/status/1234567890", "iframeSrc": "https://your-worker.workers.dev/embed/aHR0cHM6Ly94LmNvbS91c2VyL3N0YXR1cy8xMjM0NTY3ODkw", "aspect": "auto" }
 ```
 
 ### `200` — `type: "card"`
