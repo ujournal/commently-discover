@@ -42,8 +42,17 @@ are unaffected. If the var is unset/empty, all cross-origin reads are blocked.
 
 Known platform embed URL (YouTube, Vimeo, Spotify, Instagram, Reddit, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
 
+For platforms that only expose a JS widget (X/Twitter, Facebook, Telegram, Threads, Bluesky) the worker serves its own embed page that loads the official widget script, and `iframeSrc` points at it (`/embed/{base64url}`). Client iframes it the same way — the page then pulls in the platform embed (frame-in-frame).
+
 ```json
 { "type": "iframe", "url": "https://…", "iframeSrc": "https://…/embed/…" }
+```
+
+Example for X:
+
+```bash
+curl "https://your-worker.workers.dev/?url=https%3A%2F%2Fx.com%2Fuser%2Fstatus%2F1234567890"
+# { "type": "iframe", "url": "https://x.com/user/status/1234567890", "iframeSrc": "https://your-worker.workers.dev/embed/aHR0cHM6Ly94LmNvbS91c2VyL3N0YXR1cy8xMjM0NTY3ODkw" }
 ```
 
 ### `200` — `type: "card"`
@@ -78,7 +87,7 @@ curl "https://your-worker.workers.dev/?url=https%3A%2F%2Fexample.com"
 # { "type": "card", "url": "https://example.com", "title": "Example Domain", ... }
 ```
 
-Also serves `favicon.ico` and `robots.txt`; successful responses are cached.
+Also serves `favicon.ico`, `robots.txt`, and script-widget embed pages at `/embed/{base64url}`; successful responses are cached.
 
 ## Deploy
 

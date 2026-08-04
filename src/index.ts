@@ -5,6 +5,7 @@ import {
 	parseAllowedOrigins,
 	withCors,
 } from "./utils/cors";
+import { getEmbedPageResponse } from "./utils/embed-page-route";
 import { getFaviconResponse } from "./utils/favicon";
 import { getInvalidUrlResponse } from "./utils/invalid-url";
 import { getRobotsTxtResponse } from "./utils/robots";
@@ -63,6 +64,22 @@ export default {
 
 		const requestUrl = new URL(request.url);
 		const { searchParams } = requestUrl;
+		const acceptLanguage =
+			searchParams.get("lang") ?? request.headers.get("Accept-Language");
+
+		// Script-widget embed pages served at /embed/{base64url} (the iframeSrc
+		// for X/Facebook/Telegram/Threads/Bluesky). Handled before discover so the
+		// base64 path segment isn't mistaken for a discover request.
+		const embedPageResponse = await getEmbedPageResponse(
+			requestUrl,
+			acceptLanguage,
+			cache,
+			ctx,
+		);
+		if (embedPageResponse) {
+			return embedPageResponse;
+		}
+
 		let target = searchParams.get("url");
 		if (!target) {
 			target = getUrlFromBase64PathSegment(requestUrl.pathname);
@@ -82,10 +99,9 @@ export default {
 			return response;
 		}
 
-		const acceptLanguage =
-			searchParams.get("lang") ?? request.headers.get("Accept-Language");
 		const response = await runProcessors(target, {
 			acceptLanguage,
+			origin: requestUrl.origin,
 		});
 
 		const tag = getCacheTagFromUrl(target);

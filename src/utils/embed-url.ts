@@ -1,17 +1,49 @@
 import { host } from "./url";
 
-/**
- * If the URL has a known iframe-able embed page, return that URL; else null.
- * Platforms that only support script widgets (X, Facebook, Telegram, Threads, Bluesky)
- * return null so the caller falls back to a link card.
- */
-export function getEmbedUrl(url: string): string | null {
-	try {
-		const u = new URL(url);
-		const h = host(u);
+/** Base ref every platform spec produces. Platform-specific fields are allowed. */
+export type EmbedRef = { url: string };
 
-		// YouTube
-		if (h === "youtube.com" || h === "youtu.be") {
+/**
+ * A platform's embed capability. `detect` decides whether a URL is an
+ * embeddable post/content of this platform (single source of truth used by both
+ * the discover iframe decision and the self-served embed page route).
+ */
+export type EmbedSpec = {
+	name: string;
+	/** Extract a ref if `url` is an embeddable post/content of this platform. */
+	detect(url: string): EmbedRef | null;
+	/** Direct third-party iframe URL (Steam widget, YouTube embed, …) or null. */
+	directSrc?(url: string): string | null;
+	/** Self-served script-widget page (frame-in-frame) for platforms without a direct iframe URL. */
+	buildPage?(
+		url: string,
+		acceptLanguage: string | null,
+	): string | null | Promise<string | null>;
+};
+
+/** Detect helper for host-based platforms (host() already strips "www."). */
+function hosts(...names: string[]): (url: string) => EmbedRef | null {
+	return (url: string) => {
+		try {
+			const u = new URL(url);
+			return names.includes(host(u)) ? { url } : null;
+		} catch {
+			return null;
+		}
+	};
+}
+
+/**
+ * Platforms with a direct iframe-able URL (YouTube, Steam, Mastodon, …).
+ * The client can point `<iframe src>` straight at `directSrc`.
+ */
+export const DIRECT_EMBED_SPECS: EmbedSpec[] = [
+	{
+		name: "youtube",
+		detect: hosts("youtube.com", "youtu.be"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			const h = host(u);
 			let videoId: string | null = null;
 			if (h === "youtu.be") {
 				videoId = u.pathname.slice(1).split("/")[0] || null;
@@ -21,21 +53,28 @@ export function getEmbedUrl(url: string): string | null {
 					videoId = u.pathname.replace(/^\/shorts\//, "").split("/")[0] || null;
 				}
 			}
-			if (videoId && /^[\w-]{11}$/.test(videoId)) {
-				return `https://www.youtube.com/embed/${videoId}`;
+			return videoId && /^[\w-]{11}$/.test(videoId)
+				? `https://www.youtube.com/embed/${videoId}`
+				: null;
+		},
+	},
+	{
+		name: "vimeo",
+		detect: hosts("vimeo.com"),
+		directSrc: (url) => {
+			const m = new URL(url).pathname.match(/\/(\d+)(?:\/|$)/);
+			return m ? `https://player.vimeo.com/video/${m[1]}` : null;
+		},
+	},
+	{
+		name: "twitch",
+		detect: hosts("twitch.tv", "clips.twitch.tv"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			if (host(u) === "clips.twitch.tv") {
+				const slug = u.pathname.slice(1).split("/")[0];
+				return slug ? `https://clips.twitch.tv/embed?clip=${slug}` : null;
 			}
-			return null;
-		}
-
-		// Vimeo
-		if (h === "vimeo.com") {
-			const m = u.pathname.match(/\/(\d+)(?:\/|$)/);
-			if (m) return `https://player.vimeo.com/video/${m[1]}`;
-			return null;
-		}
-
-		// Twitch
-		if (h === "twitch.tv" || h === "www.twitch.tv") {
 			const path = u.pathname.replace(/^\/+/, "").split("/");
 			if (path[0] === "videos" && path[1]) {
 				return `https://player.twitch.tv/?video=${path[1]}`;
@@ -51,29 +90,29 @@ export function getEmbedUrl(url: string): string | null {
 				return `https://player.twitch.tv/?channel=${path[0]}`;
 			}
 			return null;
-		}
-		if (h === "clips.twitch.tv") {
-			const slug = u.pathname.slice(1).split("/")[0];
-			if (slug) return `https://clips.twitch.tv/embed?clip=${slug}`;
-			return null;
-		}
-
-		// TikTok
-		if (h === "tiktok.com" || h === "www.tiktok.com") {
-			const m = u.pathname.match(/\/video\/(\d+)/);
-			if (m) return `https://www.tiktok.com/embed/v2/${m[1]}`;
-			return null;
-		}
-
-		// Dailymotion
-		if (h === "dailymotion.com" || h === "www.dailymotion.com") {
-			const m = u.pathname.match(/\/video\/([a-zA-Z0-9]+)/);
-			if (m) return `https://www.dailymotion.com/embed/video/${m[1]}`;
-			return null;
-		}
-
-		// Instagram
-		if (h === "instagram.com" || h === "www.instagram.com") {
+		},
+	},
+	{
+		name: "tiktok",
+		detect: hosts("tiktok.com"),
+		directSrc: (url) => {
+			const m = new URL(url).pathname.match(/\/video\/(\d+)/);
+			return m ? `https://www.tiktok.com/embed/v2/${m[1]}` : null;
+		},
+	},
+	{
+		name: "dailymotion",
+		detect: hosts("dailymotion.com"),
+		directSrc: (url) => {
+			const m = new URL(url).pathname.match(/\/video\/([a-zA-Z0-9]+)/);
+			return m ? `https://www.dailymotion.com/embed/video/${m[1]}` : null;
+		},
+	},
+	{
+		name: "instagram",
+		detect: hosts("instagram.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
 			const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
 			if (!m) return null;
 			const path = u.pathname
@@ -82,97 +121,102 @@ export function getEmbedUrl(url: string): string | null {
 				.slice(0, 4)
 				.join("/");
 			return `https://www.instagram.com${path}/embed/`;
-		}
-
-		// Spotify
-		if (h === "open.spotify.com") {
-			const m = u.pathname.match(
+		},
+	},
+	{
+		name: "spotify",
+		detect: hosts("open.spotify.com"),
+		directSrc: (url) => {
+			const m = new URL(url).pathname.match(
 				/^\/(track|album|playlist|artist|show|episode)\/([a-zA-Z0-9]+)/,
 			);
-			if (m) return `https://open.spotify.com/embed/${m[1]}/${m[2]}`;
-			return null;
-		}
-
-		// SoundCloud
-		if (h === "w.soundcloud.com") {
-			if (/^\/player\/?$/.test(u.pathname)) {
-				const embedTarget = u.searchParams.get("url");
-				if (embedTarget) return u.href;
+			return m ? `https://open.spotify.com/embed/${m[1]}/${m[2]}` : null;
+		},
+	},
+	{
+		name: "soundcloud",
+		detect: hosts("w.soundcloud.com", "api.soundcloud.com", "soundcloud.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			const h = host(u);
+			if (h === "w.soundcloud.com") {
+				if (/^\/player\/?$/.test(u.pathname)) {
+					const embedTarget = u.searchParams.get("url");
+					if (embedTarget) return u.href;
+				}
+				return null;
 			}
-			return null;
-		}
-		if (h === "api.soundcloud.com") {
-			const m = u.pathname.match(/^\/tracks\/(.+)/);
-			if (m?.[1]) {
-				return `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.href)}`;
+			if (h === "api.soundcloud.com") {
+				const m = u.pathname.match(/^\/tracks\/(.+)/);
+				return m?.[1]
+					? `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.href)}`
+					: null;
 			}
-			return null;
-		}
-		if (h === "soundcloud.com") {
 			const path = u.pathname.replace(/^\/+|\/+$/, "");
 			const segments = path.split("/").filter(Boolean);
-			if (segments[0] !== "discover" && segments.length >= 2) {
-				return `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.origin + "/" + path)}`;
-			}
-			return null;
-		}
-
-		// Reddit
-		if (
-			h === "reddit.com" ||
-			h === "www.reddit.com" ||
-			h === "old.reddit.com" ||
-			h === "new.reddit.com"
-		) {
-			const path = u.pathname.replace(/^\/+|\/+$/, "");
+			return segments[0] !== "discover" && segments.length >= 2
+				? `https://w.soundcloud.com/player/?url=${encodeURIComponent(u.origin + "/" + path)}`
+				: null;
+		},
+	},
+	{
+		name: "reddit",
+		detect: hosts("reddit.com", "old.reddit.com", "new.reddit.com"),
+		directSrc: (url) => {
+			const path = new URL(url).pathname.replace(/^\/+|\/+$/, "");
 			const m = path.match(/^r\/([^/]+)\/comments\/([^/]+)/);
 			if (!m) return null;
 			const pathNorm = path.replace(/\/+$/, "");
-			return `https://www.reddit.com/${pathNorm}/embed/`.replace(
-				/\/+$/,
-				"/",
-			);
-		}
-
-		// CodePen
-		if (h === "codepen.io") {
+			return `https://www.reddit.com/${pathNorm}/embed/`.replace(/\/+$/, "/");
+		},
+	},
+	{
+		name: "codepen",
+		detect: hosts("codepen.io"),
+		directSrc: (url) => {
+			const u = new URL(url);
 			const m = u.pathname.match(/\/(?:pen|details)\/([^/]+)/);
-			if (m) return `https://codepen.io${u.pathname.replace(/\/?$/, "")}/embed`;
-			return null;
-		}
-
-		// Figma
-		if (h === "figma.com" || h === "www.figma.com") {
-			if (/^\/(file|design|proto)\/[^/]+/.test(u.pathname)) {
-				return `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`;
-			}
-			return null;
-		}
-
-		// Loom
-		if (h === "loom.com" || h === "www.loom.com") {
+			return m
+				? `https://codepen.io${u.pathname.replace(/\/?$/, "")}/embed`
+				: null;
+		},
+	},
+	{
+		name: "figma",
+		detect: hosts("figma.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			return /^\/(file|design|proto)\/[^/]+/.test(u.pathname)
+				? `https://www.figma.com/embed?embed_host=share&url=${encodeURIComponent(url)}`
+				: null;
+		},
+	},
+	{
+		name: "loom",
+		detect: hosts("loom.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
 			const m = u.pathname.match(/\/share\/([a-zA-Z0-9]+)/);
-			if (m) return `https://www.loom.com/embed/${m[1]}`;
-			return null;
-		}
-
-		// Pinterest
-		if (
-			h === "pinterest.com" ||
-			h === "pinterest.co.uk" ||
-			h === "pinterest.ca" ||
-			h === "pin.it"
-		) {
-			if (h === "pin.it") return null;
+			return m ? `https://www.loom.com/embed/${m[1]}` : null;
+		},
+	},
+	{
+		name: "pinterest",
+		detect: hosts("pinterest.com", "pinterest.co.uk", "pinterest.ca", "pin.it"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			if (host(u) === "pin.it") return null;
 			const pinMatch = u.pathname.match(/\/pin\/(\d+)/);
-			if (pinMatch) {
-				return `https://assets.pinterest.com/ext/embed.html?id=${pinMatch[1]}`;
-			}
-			return null;
-		}
-
-		// LinkedIn
-		if (h === "linkedin.com" || h === "www.linkedin.com") {
+			return pinMatch
+				? `https://assets.pinterest.com/ext/embed.html?id=${pinMatch[1]}`
+				: null;
+		},
+	},
+	{
+		name: "linkedin",
+		detect: hosts("linkedin.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
 			let activityId: string | null = null;
 			const urnMatch = u.pathname.match(/urn:li:activity:(\d+)/);
 			if (urnMatch) activityId = urnMatch[1];
@@ -180,19 +224,17 @@ export function getEmbedUrl(url: string): string | null {
 				const activityMatch = u.pathname.match(/activity-(\d+)/);
 				if (activityMatch) activityId = activityMatch[1];
 			}
-			if (activityId) {
-				return `https://www.linkedin.com/embed/feed/update/urn:li:activity:${activityId}`;
-			}
-			return null;
-		}
-
-		// Giphy
-		if (
-			h === "giphy.com" ||
-			h === "www.giphy.com" ||
-			h === "media.giphy.com" ||
-			h === "i.giphy.com"
-		) {
+			return activityId
+				? `https://www.linkedin.com/embed/feed/update/urn:li:activity:${activityId}`
+				: null;
+		},
+	},
+	{
+		name: "giphy",
+		detect: hosts("giphy.com", "media.giphy.com", "i.giphy.com"),
+		directSrc: (url) => {
+			const u = new URL(url);
+			const h = host(u);
 			let gifId: string | null = null;
 			if (h === "media.giphy.com") {
 				const m = u.pathname.match(/\/media\/([^/]+)/);
@@ -206,35 +248,38 @@ export function getEmbedUrl(url: string): string | null {
 					gifId = segments[segments.length - 1] || null;
 				}
 			}
-			if (gifId && /^[\w-]+$/.test(gifId)) {
-				return `https://giphy.com/embed/${gifId}`;
+			return gifId && /^[\w-]+$/.test(gifId)
+				? `https://giphy.com/embed/${gifId}`
+				: null;
+		},
+	},
+	{
+		name: "steam",
+		detect: hosts("store.steampowered.com", "steamcommunity.com"),
+		directSrc: (url) => {
+			const m = new URL(url).pathname.match(/\/app\/(\d+)/);
+			return m ? `https://store.steampowered.com/widget/${m[1]}/` : null;
+		},
+	},
+	{
+		name: "mastodon",
+		detect: (url) => {
+			try {
+				const u = new URL(url);
+				if (u.protocol !== "http:" && u.protocol !== "https:") return null;
+				let path = u.pathname.replace(/\/+$/, "");
+				if (path.endsWith("/embed")) path = path.slice(0, -"/embed".length);
+				return /^\/@([^/]+)\/(\d+)$/.test(path) ? { url } : null;
+			} catch {
+				return null;
 			}
-			return null;
-		}
-
-		// Steam
-		if (h === "store.steampowered.com" || h === "steamcommunity.com") {
-			const appMatch = u.pathname.match(/\/app\/(\d+)/);
-			if (appMatch) {
-				return `https://store.steampowered.com/widget/${appMatch[1]}/`;
-			}
-			return null;
-		}
-
-		// Mastodon: /@handle/{numeric-id} on any instance
-		{
+		},
+		directSrc: (url) => {
+			const u = new URL(url);
 			let path = u.pathname.replace(/\/+$/, "");
-			if (path.endsWith("/embed")) {
-				path = path.slice(0, -"/embed".length);
-			}
+			if (path.endsWith("/embed")) path = path.slice(0, -"/embed".length);
 			const m = path.match(/^\/@([^/]+)\/(\d+)$/);
-			if (m && (u.protocol === "http:" || u.protocol === "https:")) {
-				return `${u.origin}/@${m[1]}/${m[2]}/embed`;
-			}
-		}
-
-		return null;
-	} catch {
-		return null;
-	}
-}
+			return m ? `${u.origin}/@${m[1]}/${m[2]}/embed` : null;
+		},
+	},
+];

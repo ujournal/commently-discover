@@ -9,12 +9,14 @@ export async function runProcessors(
 	url: string,
 	options: {
 		acceptLanguage?: string | null;
+		origin?: string | null;
 		processors?: Processor[];
 	} = {},
 ): Promise<Response> {
 	const processors = options.processors ?? defaultProcessors;
 	const context: ProcessorContext = {
 		acceptLanguage: options.acceptLanguage ?? null,
+		origin: options.origin ?? null,
 	};
 
 	for (const processor of processors) {

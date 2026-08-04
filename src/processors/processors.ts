@@ -1,13 +1,13 @@
 import type { Processor, ProcessorContext, ProcessorResult } from "./types";
 import { jsonResponse } from "../utils/discover";
-import { getEmbedUrl } from "../utils/embed-url";
+import { getEmbedUrl } from "../utils/platform-embeds";
 import { getBasicRef } from "../utils/platform-refs";
 
 /** Known platform embed URL → iframe JSON. */
 const embedProcessor: Processor = {
 	name: "embed",
-	handle(url: string): ProcessorResult {
-		const iframeSrc = getEmbedUrl(url);
+	handle(url: string, context: ProcessorContext): ProcessorResult {
+		const iframeSrc = getEmbedUrl(url, context.origin ?? undefined);
 		if (!iframeSrc) return { handled: false };
 		return {
 			handled: true,

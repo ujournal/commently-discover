@@ -32,6 +32,11 @@ export function getUrlFromBase64PathSegment(pathname: string): string | null {
 	}
 }
 
+/** URL-safe base64 (RFC 4648 URL-safe, no padding) — usable as a single URL path segment. */
+export function toUrlSafeBase64(s: string): string {
+	return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
 /** Normalize host (no www). */
 export function host(url: URL): string {
 	return url.hostname.replace(/^www\./, "");

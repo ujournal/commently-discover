@@ -3,6 +3,8 @@
  */
 export type ProcessorContext = {
 	acceptLanguage: string | null;
+	/** Worker origin (from request URL); used to build self-served embed page URLs. */
+	origin?: string | null;
 };
 
 /**
