@@ -116,7 +116,7 @@ export function buildFacebookEmbedHtml(
 		bodyContent: `  <div id="fb-root"></div>
   <div class="fb-post" data-href="${safeHref}" data-width="500"></div>
   <script async defer src="https://connect.facebook.net/en_US/sdk.js#xfbml=1&amp;version=v3.2"></script>`,
-		wrapperStyle: `.embed-wrap .fb-post { background-color: #fff; }`,
+		wrapperStyle: `.embed-wrap .fb-post { background-color: transparent; }`,
 		acceptLanguage,
 	});
 }
