@@ -15,7 +15,7 @@ type WidgetPageOptions = {
 	wrapperStyle: string;
 	acceptLanguage: string | null;
 	bodyStyle?: string;
-	/** Show a pulsing skeleton until the widget injects content. Default true. */
+	/** Show a skeleton fallback until the widget injects content. Default true. */
 	scriptEmbedSkeleton?: boolean;
 };
 
@@ -131,7 +131,10 @@ export function getTelegramPostRef(url: string): string | null {
 		if (h !== "t.me" && h !== "telegram.me" && h !== "telegram.dog") {
 			return null;
 		}
-		const parts = u.pathname.replace(/^\/+|\/+$/, "").split("/").filter(Boolean);
+		const parts = u.pathname
+			.replace(/^\/+|\/+$/, "")
+			.split("/")
+			.filter(Boolean);
 		if (parts.length >= 2) return parts.join("/"); // e.g. "durov/43" or "c/1234567890/99"
 		return null;
 	} catch {
@@ -162,8 +165,7 @@ export function getThreadsPostRef(url: string): string | null {
 	try {
 		const u = new URL(url);
 		const h = host(u);
-		const isThreads =
-			h === "threads.net" || h === "threads.com";
+		const isThreads = h === "threads.net" || h === "threads.com";
 		if (!isThreads) return null;
 		const path = u.pathname.replace(/^\/+|\/+$/, "");
 		const parts = path.split("/").filter(Boolean);
@@ -298,7 +300,11 @@ export function getRedditPostRef(url: string): {
 	try {
 		const u = new URL(url);
 		const h = host(u);
-		if (h !== "reddit.com" && h !== "old.reddit.com" && h !== "new.reddit.com") {
+		if (
+			h !== "reddit.com" &&
+			h !== "old.reddit.com" &&
+			h !== "new.reddit.com"
+		) {
 			return null;
 		}
 		const path = u.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
@@ -356,7 +362,9 @@ export const WIDGET_EMBED_SPECS: EmbedSpec[] = [
 		},
 		buildPage: (url, acceptLanguage) => {
 			const r = getRedditPostRef(url);
-			return r ? buildRedditEmbedHtml(r.postUrl, r.titleSlug, acceptLanguage) : null;
+			return r
+				? buildRedditEmbedHtml(r.postUrl, r.titleSlug, acceptLanguage)
+				: null;
 		},
 	},
 	{
