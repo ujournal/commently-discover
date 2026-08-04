@@ -259,7 +259,7 @@ export function buildBlueskyEmbedHtml(
 		platform: "Bluesky",
 		ref: postUrl,
 		bodyContent: `  ${inner}`,
-		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 600px; margin: 0 auto; }
+		wrapperStyle: `.embed-wrap { padding: 1rem; max-width: 600px; margin: auto; }
     .embed-wrap blockquote { margin: 0 auto; }
     .embed-wrap .bluesky-embed { margin-top: 0 !important; margin-bottom: 0 !important; }`,
 		acceptLanguage,
@@ -281,7 +281,7 @@ export function buildBlueskyIframeHtml(
 		ref: postUrl,
 		bodyContent: `    <iframe src="${safeSrc}" title="Bluesky post" loading="lazy"></iframe>`,
 		bodyStyle: "background: #fff;",
-		wrapperStyle: `.embed-wrap { padding: 0; width: 100%; max-width: 600px; margin: 0 auto; border-radius: 8px; overflow: hidden; }
+		wrapperStyle: `.embed-wrap { padding: 0; width: 100%; max-width: 600px; margin: auto; border-radius: 8px; overflow: hidden; }
     .embed-wrap iframe { width: 100%; height: 600px; }`,
 		scriptEmbedSkeleton: false,
 		acceptLanguage,

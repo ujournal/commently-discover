@@ -12,7 +12,7 @@ export const EMBED_PAGE_BODY_BASE = `
     html, body { height: 100%; font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; scrollbar-width: none; -ms-overflow-style: none; }
     html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
     body { display: flex; flex-direction: column; }
-    .embed-wrap { width: 100%; margin: auto 0; display: flex; flex-direction: column; justify-content: center; }
+    .embed-wrap { width: 100%; margin: auto; display: flex; flex-direction: column; justify-content: center; }
     .embed-wrap > * { width: 100% !important; }
     .embed-content { min-width: 0; padding: 1rem 0; display: flex; flex-direction: column; align-items: center; }
     .embed-wrap iframe { border: 0; display: block; margin: 0 auto; }
