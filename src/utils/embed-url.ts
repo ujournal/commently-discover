@@ -109,21 +109,6 @@ export const DIRECT_EMBED_SPECS: EmbedSpec[] = [
 		},
 	},
 	{
-		name: "instagram",
-		detect: hosts("instagram.com"),
-		directSrc: (url) => {
-			const u = new URL(url);
-			const m = u.pathname.match(/\/(?:p|reel)\/([A-Za-z0-9_-]+)/);
-			if (!m) return null;
-			const path = u.pathname
-				.replace(/\/+$/, "")
-				.split("/")
-				.slice(0, 4)
-				.join("/");
-			return `https://www.instagram.com${path}/embed/`;
-		},
-	},
-	{
 		name: "spotify",
 		detect: hosts("open.spotify.com"),
 		directSrc: (url) => {

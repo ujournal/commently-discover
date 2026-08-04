@@ -35,8 +35,15 @@ describe("getEmbedUrl", () => {
 
 	it("returns Instagram embed URL", () => {
 		expect(
-			getEmbedUrl("https://www.instagram.com/p/AbCdEfGhIjK/"),
-		).toBe("https://www.instagram.com/p/AbCdEfGhIjK/embed/");
+			getEmbedUrl(
+				"https://www.instagram.com/p/AbCdEfGhIjK/",
+				"https://commently-discover.workers.dev",
+			),
+		).toBe(
+			`https://commently-discover.workers.dev/embed/${toUrlSafeBase64(
+				"https://www.instagram.com/p/AbCdEfGhIjK/",
+			)}`,
+		);
 	});
 
 	it("returns TikTok embed URL", () => {

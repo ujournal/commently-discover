@@ -40,9 +40,9 @@ are unaffected. If the var is unset/empty, all cross-origin reads are blocked.
 
 ### `200` — `type: "iframe"`
 
-Known platform embed URL (YouTube, Vimeo, Spotify, Instagram, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
+Known platform embed URL (YouTube, Vimeo, Spotify, TikTok, Steam, Mastodon, …). Client builds `<iframe src={iframeSrc}>`.
 
-For platforms that only expose a JS widget (X/Twitter, Facebook, Telegram, Threads, Bluesky, Reddit) the worker serves its own embed page that loads the official widget script, and `iframeSrc` points at it (`/embed/{base64url}`). Client iframes it the same way — the page then pulls in the platform embed (frame-in-frame).
+For platforms that only expose a JS widget (X/Twitter, Facebook, Instagram, Telegram, Threads, Bluesky, Reddit) the worker serves its own embed page that loads the official widget script, and `iframeSrc` points at it (`/embed/{base64url}`). Client iframes it the same way — the page then pulls in the platform embed (frame-in-frame).
 
 `aspect` is a client rendering hint: `"16:9"` for fixed-ratio video players (YouTube, Vimeo, Twitch, Dailymotion, Loom) that the client should give a 16:9 box; `"auto"` for content-sized frames that resize to their content — the client should NOT force a ratio on those.
 

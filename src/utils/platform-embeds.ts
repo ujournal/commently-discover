@@ -121,6 +121,46 @@ export function buildFacebookEmbedHtml(
 	});
 }
 
+/** Instagram post ref: canonical permalink and original href, or null. */
+export function getInstagramPostRef(url: string): {
+	permalink: string;
+	href: string;
+} | null {
+	try {
+		const u = new URL(url);
+		if (host(u) !== "instagram.com") return null;
+		const m = u.pathname.match(/\/(p|reel)\/([A-Za-z0-9_-]+)/);
+		if (!m) return null;
+		return {
+			permalink: `https://www.instagram.com/${m[1]}/${m[2]}/`,
+			href: u.href,
+		};
+	} catch {
+		return null;
+	}
+}
+
+/** Build HTML page that embeds an Instagram post via the official embed.js widget. */
+export function buildInstagramEmbedHtml(
+	permalink: string,
+	href: string,
+	acceptLanguage: string | null,
+): string {
+	const safePermalink = escapeHtml(permalink);
+	const safeHref = escapeHtml(href);
+	return buildWidgetPage({
+		title: "Instagram post",
+		platform: "Instagram",
+		ref: href,
+		bodyContent: `  <blockquote class="instagram-media" data-instgrm-permalink="${safePermalink}" data-instgrm-version="14">
+  <a href="${safeHref}">Instagram post</a>
+</blockquote>
+  <script async src="https://www.instagram.com/embed.js"></script>`,
+		wrapperStyle: "",
+		acceptLanguage,
+	});
+}
+
 /** Telegram post ref for the official widget (channel/postid), or null. */
 export function getTelegramPostRef(url: string): string | null {
 	try {
@@ -369,6 +409,19 @@ export const WIDGET_EMBED_SPECS: EmbedSpec[] = [
 		buildPage: (url, acceptLanguage) => {
 			const r = getTwitterStatusRef(url);
 			return r ? buildTwitterEmbedHtml(r.id, r.href, acceptLanguage) : null;
+		},
+	},
+	{
+		name: "instagram",
+		detect: (url) => {
+			const r = getInstagramPostRef(url);
+			return r ? { url: r.permalink } : null;
+		},
+		buildPage: (url, acceptLanguage) => {
+			const r = getInstagramPostRef(url);
+			return r
+				? buildInstagramEmbedHtml(r.permalink, r.href, acceptLanguage)
+				: null;
 		},
 	},
 	{
